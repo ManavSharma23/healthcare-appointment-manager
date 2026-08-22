@@ -60,7 +60,7 @@ model Appointment {
   notifications       Notification[]
   calendar_events     CalendarEvent[]
 
-  @@unique([doctor_id, slot_start], map: "uniq_doc_slot")
+  @@index([doctor_id, slot_start], map: "idx_doc_slot")
 }
 
 model SymptomForm {

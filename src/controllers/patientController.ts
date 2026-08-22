@@ -150,7 +150,7 @@ export async function cancel(req: AuthenticatedRequest, res: Response) {
   const { reason } = req.body;
 
   try {
-    const appointment = await cancelAppointment(id, patientId, reason);
+    const appointment = await cancelAppointment(id, patientId, req.user!.role, reason);
     return res.json({ message: 'Appointment cancelled', appointment });
   } catch (err: any) {
     return res.status(400).json({ error: err.message });
