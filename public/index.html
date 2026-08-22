@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PulseCare Clinical Scheduling System</title>
+  <title>PulseCare Clinical Appointment Manager</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -12,21 +12,21 @@
 <body>
 
   <div class="app-layout">
-    <!-- Left-Rail Clinical Sidebar (Epic/Cerner Style) -->
+    <!-- Left-Rail Clinical Sidebar (DaySchedule & Epic Workstation Hybrid) -->
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="brand-title">PULSE<span>CARE</span></div>
-        <div class="system-subtitle">Clinical Scheduling System</div>
+        <div class="system-subtitle">Clinical Appointment Manager</div>
       </div>
 
       <!-- Single-line quiet status bar -->
       <div class="system-status-line">
         <span class="status-indicator"></span>
-        <span class="status-text">System Nominal</span>
+        <span class="status-text">System Nominal • JWT Auth Active</span>
       </div>
 
       <nav class="sidebar-nav">
-        <div class="nav-section-label">Portals</div>
+        <div class="nav-section-label">Portals & Views</div>
         <button class="nav-item active" onclick="switchDashboard('patient')">
           <span class="nav-icon">▪</span> Patient Scheduling
         </button>
@@ -38,24 +38,30 @@
         </button>
       </nav>
 
-      <!-- Identity Chip -->
+      <!-- Authenticated Account Switcher (DaySchedule-style Role Control) -->
       <div class="sidebar-footer">
         <div class="active-user-info">
           <div class="user-role-label" id="currentUserName">Jane Doe</div>
           <div class="user-email-text" id="currentEmail">patient@clinic.com</div>
+          <div style="margin-top:0.5rem; display:flex; gap:0.3rem;">
+            <button class="btn-role-switch" onclick="switchAccountRole('patient')" title="Authenticate as Patient">Patient Token</button>
+            <button class="btn-role-switch" onclick="switchAccountRole('doctor')" title="Authenticate as Doctor">Doctor Token</button>
+            <button class="btn-role-switch" onclick="switchAccountRole('admin')" title="Authenticate as Admin">Admin Token</button>
+          </div>
         </div>
       </div>
     </aside>
 
     <!-- Main Workspace Area -->
     <div class="main-workspace">
-      <!-- Top Action Bar -->
+      <!-- Top Action Header (DaySchedule style) -->
       <header class="top-workspace-header">
         <div class="workspace-title-box">
           <h1 id="workspaceTitle">Patient Scheduling & Intake</h1>
           <div class="workspace-subtitle" id="workspaceSub">Select doctor, reserve ledger slots, and review AI clinical triages</div>
         </div>
         <div class="top-controls">
+          <span class="sync-chip">Calendar Sync: Google OAuth 2.0</span>
           <button class="btn btn-outline btn-sm" onclick="refreshActivePortal()">Refresh Data</button>
         </div>
       </header>
@@ -73,6 +79,7 @@
               </div>
 
               <div class="filter-input-wrap">
+                <label class="clinical-label">Filter by Clinical Specialization</label>
                 <select id="patientSpecFilter" onchange="loadDoctors()">
                   <option value="">All Specializations</option>
                   <option value="General Medicine">General Medicine</option>

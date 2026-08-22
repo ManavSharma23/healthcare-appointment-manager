@@ -58,6 +58,10 @@ function refreshActivePortal() {
   switchDashboard(activeRole);
 }
 
+function switchAccountRole(role) {
+  switchDashboard(role);
+}
+
 function switchDashboard(role) {
   activeRole = role;
 
@@ -225,7 +229,6 @@ async function submitSymptomsAndConfirm() {
     return;
   }
 
-  // 1. Submit Symptoms (Triggers Pre-Visit AI Analysis)
   await fetch(`${API_BASE}/patients/appointments/${activeHoldId}/symptoms`, {
     method: 'POST',
     headers: {
@@ -235,7 +238,6 @@ async function submitSymptomsAndConfirm() {
     body: JSON.stringify({ symptoms })
   });
 
-  // 2. Confirm Appointment
   const res = await fetch(`${API_BASE}/patients/appointments/${activeHoldId}/confirm`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${tokens.patient}` }
