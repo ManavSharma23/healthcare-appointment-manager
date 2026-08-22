@@ -73,7 +73,19 @@
               </div>
 
               <div class="filter-input-wrap">
-                <input type="text" id="patientSpecFilter" placeholder="Search specialization (e.g. Cardiology, Dermatology...)" oninput="loadDoctors()">
+                <select id="patientSpecFilter" onchange="loadDoctors()">
+                  <option value="">All Specializations</option>
+                  <option value="General Medicine">General Medicine</option>
+                  <option value="Cardiology">Cardiology</option>
+                  <option value="Dermatology">Dermatology</option>
+                  <option value="Neurology">Neurology</option>
+                  <option value="Pediatrics">Pediatrics</option>
+                  <option value="Orthopedics">Orthopedics</option>
+                  <option value="Psychiatry">Psychiatry</option>
+                  <option value="General Surgery">General Surgery</option>
+                  <option value="Ophthalmology">Ophthalmology</option>
+                  <option value="Obstetrics & Gynecology">Obstetrics & Gynecology</option>
+                </select>
               </div>
 
               <div id="doctorList" class="doctor-ledger-list"></div>
@@ -202,7 +214,19 @@
                 </div>
                 <div class="form-group">
                   <label class="clinical-label">Specialization</label>
-                  <input type="text" id="adminDocSpec" required placeholder="Neurology">
+                  <select id="adminDocSpec" required>
+                    <option value="" disabled selected>Select Clinical Specialization</option>
+                    <option value="General Medicine">General Medicine</option>
+                    <option value="Cardiology">Cardiology</option>
+                    <option value="Dermatology">Dermatology</option>
+                    <option value="Neurology">Neurology</option>
+                    <option value="Pediatrics">Pediatrics</option>
+                    <option value="Orthopedics">Orthopedics</option>
+                    <option value="Psychiatry">Psychiatry</option>
+                    <option value="General Surgery">General Surgery</option>
+                    <option value="Ophthalmology">Ophthalmology</option>
+                    <option value="Obstetrics & Gynecology">Obstetrics & Gynecology</option>
+                  </select>
                 </div>
                 <button type="submit" class="btn btn-teal btn-full">Create Doctor Profile</button>
               </form>
