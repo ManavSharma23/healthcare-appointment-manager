@@ -24,11 +24,14 @@ export const CreateDoctorSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   specialisation: z.string().min(2),
-  slot_duration_min: z.number().int().default(30),
-  working_hours: z.object({
-    start: z.string().default('09:00'),
-    end: z.string().default('17:00'),
-  }),
+  slot_duration_min: z.number().int().optional().default(30),
+  working_hours: z
+    .object({
+      start: z.string().default('09:00'),
+      end: z.string().default('17:00'),
+    })
+    .optional()
+    .default({ start: '09:00', end: '17:00' }),
 });
 
 export const DoctorLeaveSchema = z.object({
