@@ -19,9 +19,10 @@
         <div class="system-subtitle">Clinical Scheduling System</div>
       </div>
 
+      <!-- Single-line quiet status bar -->
       <div class="system-status-line">
         <span class="status-indicator"></span>
-        <span class="status-text">System Nominal • Concurrency Lock Active</span>
+        <span class="status-text">System Nominal</span>
       </div>
 
       <nav class="sidebar-nav">
@@ -37,9 +38,10 @@
         </button>
       </nav>
 
+      <!-- Identity Chip -->
       <div class="sidebar-footer">
         <div class="active-user-info">
-          <div class="user-role-label" id="currentRole">Patient Account</div>
+          <div class="user-role-label" id="currentUserName">Jane Doe</div>
           <div class="user-email-text" id="currentEmail">patient@clinic.com</div>
         </div>
       </div>
@@ -71,7 +73,7 @@
               </div>
 
               <div class="filter-input-wrap">
-                <input type="text" id="patientSpecFilter" placeholder="Filter by specialization (e.g. Cardiology, Dermatology...)" oninput="loadDoctors()">
+                <input type="text" id="patientSpecFilter" placeholder="Search specialization (e.g. Cardiology, Dermatology...)" oninput="loadDoctors()">
               </div>
 
               <div id="doctorList" class="doctor-ledger-list"></div>
@@ -125,21 +127,52 @@
           </div>
         </section>
 
-        <!-- DOCTOR WORKSTATION -->
+        <!-- DOCTOR WORKSTATION (BALANCED 2-COLUMN GRID) -->
         <section id="doctorDashboard" class="dashboard-panel">
-          <div class="clinical-card">
-            <div class="card-title-row flex-between">
-              <div>
-                <h2>Daily Appointment Schedule</h2>
-                <div class="card-subtitle-text">Review pre-visit AI summaries and complete clinical visit notes</div>
+          <div class="grid-2col">
+            <!-- Left Column: Daily Schedule Feed -->
+            <div class="clinical-card">
+              <div class="card-title-row flex-between">
+                <div>
+                  <h2>Daily Appointment Schedule</h2>
+                  <div class="card-subtitle-text">Review pre-visit AI summaries and submit post-visit notes</div>
+                </div>
+                <div class="date-control">
+                  <label>Date: </label>
+                  <input type="date" id="doctorFilterDate" onchange="loadDoctorSchedule()">
+                </div>
               </div>
-              <div class="date-control">
-                <label>Date Filter: </label>
-                <input type="date" id="doctorFilterDate" onchange="loadDoctorSchedule()">
-              </div>
+
+              <div id="doctorAppointmentsList" class="clinical-feed"></div>
             </div>
 
-            <div id="doctorAppointmentsList" class="clinical-feed"></div>
+            <!-- Right Column: Today at a Glance Summary Panel -->
+            <div class="clinical-card">
+              <div class="card-title-row">
+                <h2>Schedule Overview</h2>
+                <div class="card-subtitle-text">Clinical load summary for selected date</div>
+              </div>
+
+              <div class="summary-stats-box">
+                <div class="stat-row">
+                  <span class="stat-label">Total Slots Scheduled</span>
+                  <span class="stat-mono" id="docTotalSlots">0</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">Confirmed Visits</span>
+                  <span class="stat-mono" style="color:var(--status-green);" id="docConfirmedCount">0</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-label">High/Medium Urgency Cases</span>
+                  <span class="stat-mono" style="color:var(--status-amber);" id="docUrgentCount">0</span>
+                </div>
+              </div>
+
+              <div class="section-divider-label" style="margin-top:1.5rem;">NEXT CONFIRMED VISIT</div>
+              <div id="docNextAppointmentBox" class="next-visit-box">
+                <div style="font-size:0.85rem; color:var(--text-muted);">No confirmed upcoming visits for this date filter.</div>
+              </div>
+            </div>
           </div>
         </section>
 

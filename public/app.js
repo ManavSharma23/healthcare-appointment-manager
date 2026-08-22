@@ -9,10 +9,11 @@ const tokens = {
   admin: '',
 };
 
+// FIX ISSUE 5: Sidebar Footer Identity Chip User Names
 const userDetails = {
-  patient: { role: 'Patient Account', email: 'patient@clinic.com' },
-  doctor: { role: 'Doctor Workstation', email: 'doctor@clinic.com' },
-  admin: { role: 'Administration Console', email: 'admin@clinic.com' },
+  patient: { name: 'Jane Doe', role: 'Patient Account', email: 'patient@clinic.com' },
+  doctor: { name: 'Dr. Sarah Jenkins', role: 'Doctor Workstation', email: 'doctor@clinic.com' },
+  admin: { name: 'System Admin', role: 'Administration Console', email: 'admin@clinic.com' },
 };
 
 const portalTitles = {
@@ -68,8 +69,9 @@ function switchDashboard(role) {
   const tabIndex = role === 'patient' ? 0 : role === 'doctor' ? 1 : 2;
   document.querySelectorAll('.nav-item')[tabIndex]?.classList.add('active');
 
+  // FIX ISSUE 5: User identity chip
   const user = userDetails[role];
-  document.getElementById('currentRole').innerText = user.role;
+  document.getElementById('currentUserName').innerText = user.name;
   document.getElementById('currentEmail').innerText = user.email;
 
   const headerMeta = portalTitles[role];
@@ -289,6 +291,28 @@ async function loadDoctorSchedule() {
 
   const rawAppointments = data.appointments || [];
 
+  // FIX ISSUE 3: Update Doctor Schedule Summary Panel stats
+  const totalSlots = rawAppointments.length;
+  const confirmedCount = rawAppointments.filter(a => a.status === 'confirmed' || a.status === 'completed').length;
+  const urgentCount = rawAppointments.filter(a => a.symptom_summary?.ai_summary?.urgency === 'High' || a.symptom_summary?.ai_summary?.urgency === 'Medium').length;
+  
+  document.getElementById('docTotalSlots').innerText = totalSlots;
+  document.getElementById('docConfirmedCount').innerText = confirmedCount;
+  document.getElementById('docUrgentCount').innerText = urgentCount;
+
+  const nextAppt = rawAppointments.find(a => a.status === 'confirmed');
+  const nextBox = document.getElementById('docNextAppointmentBox');
+  if (nextAppt) {
+    const timeStr = new Date(nextAppt.slot_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    nextBox.innerHTML = `
+      <div style="font-family:var(--font-header); font-weight:600; color:var(--text-primary);"><span class="mono-code">${timeStr}</span> ${nextAppt.patient_name}</div>
+      <div style="font-size:0.8rem; color:var(--text-muted);">${nextAppt.patient_email}</div>
+      <div style="font-size:0.75rem; color:var(--accent-teal); margin-top:0.25rem;">Confirmed Visit</div>
+    `;
+  } else {
+    nextBox.innerHTML = `<div style="font-size:0.85rem; color:var(--text-muted);">No confirmed upcoming visits for this date filter.</div>`;
+  }
+
   if (rawAppointments.length === 0) {
     container.innerHTML = '<p style="color:var(--text-muted); padding:1rem;">No appointments scheduled for this date.</p>';
     return;
@@ -319,7 +343,7 @@ async function loadDoctorSchedule() {
             <span class="urgency-badge urgency-${(appt.symptom_summary.ai_summary?.urgency || 'Medium').toLowerCase()}">${appt.symptom_summary.ai_summary?.urgency || 'Medium'} Urgency</span>
           </div>
           <div class="chief-complaint-text">${appt.symptom_summary.ai_summary?.chief_complaint || appt.symptom_summary.symptoms}</div>
-          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.2rem;">3 Suggested Questions for Doctor:</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.2rem;">Suggested Questions for Doctor:</div>
           <ol class="questions-list">
             ${(appt.symptom_summary.ai_summary?.questions || []).map(q => `<li>${q}</li>`).join('')}
           </ol>
@@ -451,7 +475,13 @@ async function loadFailedNotifications() {
   container.innerHTML = '';
 
   if (!data.failedNotifications || data.failedNotifications.length === 0) {
-    container.innerHTML = '<div style="color:var(--status-green); font-weight:600; font-size:0.85rem; padding:1rem 0;">All notifications delivered. Dead-letter queue is empty.</div>';
+    // FIX MINOR POLISH: Structured Empty State Box for Failed Notifications
+    container.innerHTML = `
+      <div class="empty-state-box">
+        <div style="font-family:var(--font-header); font-weight:600; color:var(--text-primary); margin-bottom:0.25rem;">Dead-Letter Queue Nominal</div>
+        <div>All event notifications delivered cleanly. Zero failed jobs.</div>
+      </div>
+    `;
     return;
   }
 

@@ -38,15 +38,14 @@ body {
   min-height: 100vh;
 }
 
-/* App Layout Structure */
 .app-layout {
   display: flex;
   min-height: 100vh;
 }
 
-/* Left-Rail Clinical Sidebar (Epic/Cerner Style) */
+/* Left-Rail Clinical Sidebar */
 .sidebar {
-  width: 260px;
+  width: 250px;
   background-color: var(--bg-sidebar);
   color: #FFFFFF;
   display: flex;
@@ -80,8 +79,9 @@ body {
   margin-top: 0.15rem;
 }
 
+/* FIX ISSUE 4: Single-line Quiet Status Line */
 .system-status-line {
-  padding: 0.75rem 1.25rem;
+  padding: 0.65rem 1.25rem;
   background: rgba(255, 255, 255, 0.03);
   border-bottom: 1px solid var(--border-dark);
   display: flex;
@@ -89,6 +89,7 @@ body {
   gap: 0.5rem;
   font-size: 0.75rem;
   color: var(--text-light);
+  white-space: nowrap;
 }
 
 .status-indicator {
@@ -97,6 +98,7 @@ body {
   background: var(--status-green);
   border-radius: 50%;
   box-shadow: 0 0 6px var(--status-green);
+  flex-shrink: 0;
 }
 
 .sidebar-nav {
@@ -171,7 +173,7 @@ body {
   color: var(--text-light);
 }
 
-/* Main Workspace Area */
+/* Main Workspace */
 .main-workspace {
   flex: 1;
   display: flex;
@@ -190,7 +192,7 @@ body {
 
 .workspace-title-box h1 {
   font-family: var(--font-header);
-  font-size: 1.5rem;
+  font-size: 1.45rem;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.3px;
@@ -225,7 +227,6 @@ body {
   .grid-2col { grid-template-columns: 1fr; }
 }
 
-/* Clinical Cards */
 .clinical-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -247,7 +248,7 @@ body {
   margin-bottom: 1.25rem;
 }
 
-/* Form Inputs & Labels */
+/* FIX ISSUE 1: UNIFIED INPUT FIELD STYLING ACROSS ALL PORTALS */
 .filter-input-wrap {
   margin-bottom: 1.25rem;
 }
@@ -272,7 +273,13 @@ body {
   margin-bottom: 0.35rem;
 }
 
-input, textarea, select {
+/* Unified Filled-Box Input Language for All Fields */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+textarea,
+select {
   width: 100%;
   padding: 0.65rem 0.85rem;
   background: var(--bg-main);
@@ -281,6 +288,7 @@ input, textarea, select {
   color: var(--text-primary);
   font-family: var(--font-body);
   font-size: 0.9rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 input:focus, textarea:focus, select:focus {
@@ -374,7 +382,7 @@ textarea {
   margin-top: 0.2rem;
 }
 
-/* Slot Grid as a Ledger System */
+/* Slot Ledger */
 .slot-ledger-container {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
@@ -434,7 +442,6 @@ textarea {
   gap: 0.6rem;
 }
 
-/* Signature Ledger Slot Buttons */
 .slot-ledger-btn {
   padding: 0.6rem 0.5rem;
   background: #FFFFFF;
@@ -510,7 +517,48 @@ textarea {
   margin-bottom: 1rem;
 }
 
-/* Clinical Feeds & Triage Cards */
+/* FIX ISSUE 3: Doctor Schedule Summary Stats Box */
+.summary-stats-box {
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 1rem 1.15rem;
+  margin-bottom: 1.25rem;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.stat-row:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--text-body);
+}
+
+.stat-mono {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.next-visit-box {
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--accent-teal);
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+/* Feeds & Triage Cards */
 .section-divider-label {
   font-size: 0.7rem;
   font-weight: 700;
@@ -533,7 +581,6 @@ textarea {
   padding: 1.15rem;
 }
 
-/* Clinical AI Triage Summary Card (Not a chat bubble) */
 .clinical-triage-card {
   background: #FFFFFF;
   border: 1px solid var(--border-color);
@@ -576,7 +623,7 @@ textarea {
   margin-bottom: 0.25rem;
 }
 
-/* Urgency Status Pills */
+/* Urgency Pills */
 .urgency-badge {
   font-family: var(--font-mono);
   font-size: 0.7rem;
@@ -592,3 +639,14 @@ textarea {
 
 .flex-between { display: flex; justify-content: space-between; align-items: center; }
 .hidden { display: none !important; }
+
+/* FIX MINOR POLISH: Structured Empty State Box */
+.empty-state-box {
+  background: var(--bg-main);
+  border: 1px dashed var(--border-color);
+  border-radius: 6px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}

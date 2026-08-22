@@ -26,10 +26,28 @@ export async function getDoctorAppointments(req: AuthenticatedRequest, res: Resp
       symptom_form: true,
       visit_note: true,
     },
-    orderBy: { slot_start: 'asc' },
+    orderBy: { created_at: 'desc' },
   });
 
-  const formatted = appointments.map((a) => ({
+  // Deduplicate by slot_start timestamp (prioritize confirmed/completed over cancelled/held)
+  const slotMap = new Map<string, typeof appointments[0]>();
+  for (const appt of appointments) {
+    const key = `${appt.slot_start.toISOString()}_${appt.patient_id}`;
+    if (!slotMap.has(key)) {
+      slotMap.set(key, appt);
+    } else {
+      const existing = slotMap.get(key)!;
+      if (existing.status === 'cancelled' && appt.status !== 'cancelled') {
+        slotMap.set(key, appt);
+      }
+    }
+  }
+
+  const uniqueAppointments = Array.from(slotMap.values()).sort(
+    (a, b) => a.slot_start.getTime() - b.slot_start.getTime()
+  );
+
+  const formatted = uniqueAppointments.map((a) => ({
     id: a.id,
     patient_id: a.patient_id,
     patient_name: a.patient.name,
