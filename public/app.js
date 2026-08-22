@@ -106,11 +106,11 @@ async function loadDoctors() {
     div.className = 'doctor-ledger-item';
     div.innerHTML = `
       <div>
-        <div class="doc-name">${doc.name}</div>
+        <div class="doc-name">${doc.name} <span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">(${doc.email})</span></div>
         <div class="doc-spec">${doc.specialisation}</div>
         <div class="doc-meta">Hours: ${doc.working_hours.start} - ${doc.working_hours.end} | ${doc.slot_duration_min} min slots</div>
       </div>
-      <button class="btn btn-teal btn-sm" onclick="selectDoctor('${doc.id}', '${doc.name}')">View Time Slots</button>
+      <button class="btn btn-teal btn-sm" onclick="selectDoctor('${doc.id}', '${doc.name} (${doc.email})')">View Time Slots</button>
     `;
     container.appendChild(div);
   });
@@ -144,14 +144,12 @@ async function loadDoctorSlots() {
     const btn = document.createElement('button');
     const timeStr = new Date(slot.slot_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     
-    // Check if this slot is the currently active hold by this user
     const isCurrentHold = activeHoldSlotStart && new Date(slot.slot_start).getTime() === new Date(activeHoldSlotStart).getTime();
     
     btn.className = `slot-ledger-btn ${isCurrentHold ? 'held' : slot.available ? 'available' : 'disabled'}`;
     btn.innerText = isCurrentHold ? `${timeStr} (Held)` : timeStr;
 
     if (isCurrentHold) {
-      // Clicking an active held slot toggles/releases the hold!
       btn.onclick = () => releaseCurrentHold();
       btn.title = "Click to release slot hold";
     } else if (slot.available) {
@@ -186,7 +184,6 @@ async function releaseCurrentHold() {
 }
 
 async function holdSlot(slotStart) {
-  // If user already has an active hold, release it first before holding a new one!
   if (activeHoldId) {
     await releaseCurrentHold();
   }
@@ -295,7 +292,7 @@ async function loadPatientAppointments() {
             <span class="urgency-badge urgency-${(appt.symptom_summary.ai_summary?.urgency || 'Medium').toLowerCase()}">Urgency: ${appt.symptom_summary.ai_summary?.urgency || 'Medium'}</span>
           </div>
           <div class="chief-complaint-text">${appt.symptom_summary.ai_summary?.chief_complaint || appt.symptom_summary.symptoms}</div>
-          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.2rem;">Suggested Clinical Questions:</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.2rem;">AI-Generated Questions Your Doctor Will Review During Visit:</div>
           <ol class="questions-list">
             ${(appt.symptom_summary.ai_summary?.questions || []).map(q => `<li>${q}</li>`).join('')}
           </ol>
@@ -379,7 +376,7 @@ async function loadDoctorSchedule() {
             <span class="urgency-badge urgency-${(appt.symptom_summary.ai_summary?.urgency || 'Medium').toLowerCase()}">${appt.symptom_summary.ai_summary?.urgency || 'Medium'} Urgency</span>
           </div>
           <div class="chief-complaint-text">${appt.symptom_summary.ai_summary?.chief_complaint || appt.symptom_summary.symptoms}</div>
-          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.2rem;">Suggested Questions for Doctor:</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.2rem;">3 Questions for Doctor to Review During Visit:</div>
           <ol class="questions-list">
             ${(appt.symptom_summary.ai_summary?.questions || []).map(q => `<li>${q}</li>`).join('')}
           </ol>
@@ -475,7 +472,7 @@ async function loadAdminDoctorsList() {
   select.innerHTML = '';
   const doctors = data.doctors || [];
   doctors.forEach(doc => {
-    select.innerHTML += `<option value="${doc.id}">${doc.name} (${doc.specialisation})</option>`;
+    select.innerHTML += `<option value="${doc.id}">${doc.name} (${doc.specialisation} - ${doc.email})</option>`;
   });
 }
 
