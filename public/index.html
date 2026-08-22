@@ -108,7 +108,7 @@
               <div id="activeHoldSection" class="hold-ledger-banner hidden">
                 <div class="hold-header-row">
                   <span class="hold-alert-title">5-MINUTE TRANSACTIONAL HOLD ACTIVE</span>
-                  <span class="mono-code" id="holdTimeCode">HOLD-TTL-5M</span>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="releaseCurrentHold()" style="font-size:0.75rem;">Release / Cancel Hold</button>
                 </div>
                 <p class="hold-instruction">Slot locked against double-booking. Complete symptom details below to confirm appointment.</p>
 
@@ -116,9 +116,11 @@
                   <label class="clinical-label">Clinical Symptoms Description</label>
                   <textarea id="symptomsInput" rows="3" placeholder="Enter patient symptom details, onset duration, and severity for pre-visit clinical triage..."></textarea>
                 </div>
-                <button class="btn btn-teal btn-full" onclick="submitSymptomsAndConfirm()">
-                  Submit Symptoms & Confirm Reservation
-                </button>
+                <div style="display:flex; gap:0.5rem;">
+                  <button class="btn btn-teal btn-full" onclick="submitSymptomsAndConfirm()">
+                    Submit Symptoms & Confirm Reservation
+                  </button>
+                </div>
               </div>
 
               <div class="section-divider-label">CONFIRMED APPOINTMENTS FEED</div>

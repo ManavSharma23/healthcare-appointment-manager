@@ -1,6 +1,7 @@
 const API_BASE = '';
 let activeRole = 'patient';
 let activeHoldId = null;
+let activeHoldSlotStart = null;
 let selectedDoctorId = null;
 
 const tokens = {
@@ -9,7 +10,6 @@ const tokens = {
   admin: '',
 };
 
-// FIX ISSUE 5: Sidebar Footer Identity Chip User Names
 const userDetails = {
   patient: { name: 'Jane Doe', role: 'Patient Account', email: 'patient@clinic.com' },
   doctor: { name: 'Dr. Sarah Jenkins', role: 'Doctor Workstation', email: 'doctor@clinic.com' },
@@ -69,7 +69,6 @@ function switchDashboard(role) {
   const tabIndex = role === 'patient' ? 0 : role === 'doctor' ? 1 : 2;
   document.querySelectorAll('.nav-item')[tabIndex]?.classList.add('active');
 
-  // FIX ISSUE 5: User identity chip
   const user = userDetails[role];
   document.getElementById('currentUserName').innerText = user.name;
   document.getElementById('currentEmail').innerText = user.email;
@@ -144,9 +143,18 @@ async function loadDoctorSlots() {
   (data.slots || []).forEach(slot => {
     const btn = document.createElement('button');
     const timeStr = new Date(slot.slot_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-    btn.className = `slot-ledger-btn ${slot.available ? 'available' : 'disabled'}`;
-    btn.innerText = timeStr;
-    if (slot.available) {
+    
+    // Check if this slot is the currently active hold by this user
+    const isCurrentHold = activeHoldSlotStart && new Date(slot.slot_start).getTime() === new Date(activeHoldSlotStart).getTime();
+    
+    btn.className = `slot-ledger-btn ${isCurrentHold ? 'held' : slot.available ? 'available' : 'disabled'}`;
+    btn.innerText = isCurrentHold ? `${timeStr} (Held)` : timeStr;
+
+    if (isCurrentHold) {
+      // Clicking an active held slot toggles/releases the hold!
+      btn.onclick = () => releaseCurrentHold();
+      btn.title = "Click to release slot hold";
+    } else if (slot.available) {
       btn.onclick = () => holdSlot(slot.slot_start);
     } else {
       btn.disabled = true;
@@ -156,7 +164,33 @@ async function loadDoctorSlots() {
   });
 }
 
+async function releaseCurrentHold() {
+  if (!activeHoldId) return;
+  try {
+    await fetch(`${API_BASE}/patients/appointments/${activeHoldId}/cancel`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${tokens.patient}`
+      },
+      body: JSON.stringify({ reason: 'Patient released slot hold' })
+    });
+  } catch (err) {
+    console.error('Failed to cancel hold:', err);
+  }
+  activeHoldId = null;
+  activeHoldSlotStart = null;
+  document.getElementById('activeHoldSection').classList.add('hidden');
+  document.getElementById('bookingMessage').innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem; margin-top:0.5rem;">Slot hold released. Select any available slot to hold.</div>';
+  loadDoctorSlots();
+}
+
 async function holdSlot(slotStart) {
+  // If user already has an active hold, release it first before holding a new one!
+  if (activeHoldId) {
+    await releaseCurrentHold();
+  }
+
   const msgDiv = document.getElementById('bookingMessage');
   msgDiv.innerHTML = '';
 
@@ -173,7 +207,8 @@ async function holdSlot(slotStart) {
 
     if (res.ok) {
       activeHoldId = data.appointment.id;
-      msgDiv.innerHTML = `<div style="color:var(--status-amber); font-weight:600; font-size:0.85rem; margin-top:0.75rem;">Slot Held for 5 Minutes. Enter symptoms below to confirm.</div>`;
+      activeHoldSlotStart = slotStart;
+      msgDiv.innerHTML = `<div style="color:var(--status-amber); font-weight:600; font-size:0.85rem; margin-top:0.75rem;">Slot Held for 5 Minutes. Click slot again or click 'Release / Cancel Hold' to undo.</div>`;
       document.getElementById('activeHoldSection').classList.remove('hidden');
       loadDoctorSlots();
     } else {
@@ -214,7 +249,9 @@ async function submitSymptomsAndConfirm() {
     document.getElementById('activeHoldSection').classList.add('hidden');
     document.getElementById('symptomsInput').value = '';
     activeHoldId = null;
+    activeHoldSlotStart = null;
     loadPatientAppointments();
+    loadDoctorSlots();
   } else {
     alert('Failed to confirm appointment.');
   }
@@ -291,7 +328,6 @@ async function loadDoctorSchedule() {
 
   const rawAppointments = data.appointments || [];
 
-  // FIX ISSUE 3: Update Doctor Schedule Summary Panel stats
   const totalSlots = rawAppointments.length;
   const confirmedCount = rawAppointments.filter(a => a.status === 'confirmed' || a.status === 'completed').length;
   const urgentCount = rawAppointments.filter(a => a.symptom_summary?.ai_summary?.urgency === 'High' || a.symptom_summary?.ai_summary?.urgency === 'Medium').length;
@@ -425,7 +461,8 @@ async function handleCreateDoctor(e) {
     loadAdminDoctorsList();
     loadDoctors();
   } else {
-    alert('Failed to create doctor profile.');
+    const data = await res.json();
+    alert(`Error: ${data.error || 'Failed to create doctor profile.'}`);
   }
 }
 
@@ -475,7 +512,6 @@ async function loadFailedNotifications() {
   container.innerHTML = '';
 
   if (!data.failedNotifications || data.failedNotifications.length === 0) {
-    // FIX MINOR POLISH: Structured Empty State Box for Failed Notifications
     container.innerHTML = `
       <div class="empty-state-box">
         <div style="font-family:var(--font-header); font-weight:600; color:var(--text-primary); margin-bottom:0.25rem;">Dead-Letter Queue Nominal</div>
