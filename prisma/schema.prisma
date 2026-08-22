@@ -1,0 +1,131 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String          @id @default(uuid())
+  name          String
+  email         String          @unique
+  password_hash String
+  role          String          // patient | doctor | admin
+  created_at    DateTime        @default(now())
+
+  doctor_profile DoctorProfile?
+  appointments_as_patient Appointment[] @relation("PatientAppointments")
+  appointments_as_doctor  Appointment[] @relation("DoctorAppointments")
+  notifications  Notification[]
+  calendar_tokens CalendarToken[]
+}
+
+model DoctorProfile {
+  id                String        @id @default(uuid())
+  user_id           String        @unique
+  user              User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  specialisation    String
+  slot_duration_min Int           @default(30)
+  working_hours     String        // JSON string e.g. {"start":"09:00","end":"17:00"}
+  is_active         Boolean       @default(true)
+  leaves            DoctorLeave[]
+}
+
+model DoctorLeave {
+  id         String        @id @default(uuid())
+  doctor_id  String
+  doctor     DoctorProfile @relation(fields: [doctor_id], references: [id], onDelete: Cascade)
+  date       String        // YYYY-MM-DD
+  reason     String?
+  created_at DateTime      @default(now())
+}
+
+model Appointment {
+  id           String   @id @default(uuid())
+  patient_id   String
+  patient      User     @relation("PatientAppointments", fields: [patient_id], references: [id])
+  doctor_id    String
+  doctor       User     @relation("DoctorAppointments", fields: [doctor_id], references: [id])
+  slot_start   DateTime
+  slot_end     DateTime
+  status       String   // held | confirmed | cancelled | completed
+  expires_at   DateTime?
+  created_at   DateTime @default(now())
+
+  symptom_form        SymptomForm?
+  visit_note          VisitNote?
+  medication_reminders MedicationReminder[]
+  notifications       Notification[]
+  calendar_events     CalendarEvent[]
+
+  @@unique([doctor_id, slot_start], map: "uniq_doc_slot")
+}
+
+model SymptomForm {
+  id             String      @id @default(uuid())
+  appointment_id String      @unique
+  appointment    Appointment @relation(fields: [appointment_id], references: [id], onDelete: Cascade)
+  symptoms_text  String
+  ai_summary     String?     // JSON string { urgency, chief_complaint, questions }
+  ai_status      String      @default("pending") // pending | success | failed
+  created_at     DateTime    @default(now())
+}
+
+model VisitNote {
+  id                 String      @id @default(uuid())
+  appointment_id     String      @unique
+  appointment        Appointment @relation(fields: [appointment_id], references: [id], onDelete: Cascade)
+  doctor_notes       String
+  prescription       String?     // JSON string array of medicines
+  ai_patient_summary String?
+  ai_status          String      @default("pending") // pending | success | failed
+  created_at         DateTime    @default(now())
+}
+
+model MedicationReminder {
+  id             String      @id @default(uuid())
+  appointment_id String
+  appointment    Appointment @relation(fields: [appointment_id], references: [id], onDelete: Cascade)
+  medicine       String
+  frequency      String      // daily, twice_daily, etc.
+  next_send_at   DateTime
+  status         String      @default("active") // active | done | failed
+  created_at     DateTime    @default(now())
+}
+
+model Notification {
+  id             String       @id @default(uuid())
+  user_id        String
+  user           User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  appointment_id String?
+  appointment    Appointment? @relation(fields: [appointment_id], references: [id], onDelete: SetNull)
+  type           String       // appointment_confirmed, appointment_cancelled, leave_conflict, reminder
+  channel        String       // email | calendar
+  status         String       @default("pending") // pending | sent | failed
+  retry_count    Int          @default(0)
+  next_retry_at  DateTime?
+  payload        String?      // JSON string
+  created_at     DateTime     @default(now())
+}
+
+model CalendarToken {
+  id            String    @id @default(uuid())
+  user_id       String    @unique
+  user          User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  access_token  String
+  refresh_token String?
+  expiry        BigInt?
+  created_at    DateTime  @default(now())
+}
+
+model CalendarEvent {
+  id             String      @id @default(uuid())
+  appointment_id String      @unique
+  appointment    Appointment @relation(fields: [appointment_id], references: [id], onDelete: Cascade)
+  google_event_id String
+  patient_synced Boolean     @default(false)
+  doctor_synced  Boolean     @default(false)
+  created_at     DateTime    @default(now())
+}
