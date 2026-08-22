@@ -1,7 +1,13 @@
 # System Design Write-up: Healthcare Appointment & Follow-up Manager
 
 ## 1. Double-Booking Prevention & Concurrency Control
-Double-booking under high request concurrency is mitigated via a multi-tiered defense strategy combining database transactions (`prisma.$transaction`) and a hard hardware-enforced relational unique constraint. Rather than relying solely on application-level `SELECT`-then-`INSERT` checks—which fail during concurrent request races—the database layer enforces a partial unique index on `appointments(doctor_id, slot_start) WHERE status IN ('held', 'confirmed')`. When simultaneous booking requests target the exact same time slot, only one database transaction succeeds in writing the row; all competing concurrent requests trigger a relational unique index violation (`P2002`). The application catches this error instantly and returns an HTTP 409 Conflict ("Slot no longer available"), ensuring zero double-bookings regardless of load.
+Double-booking under high request concurrency is mitigated via a multi-tiered defense strategy combining database transactions (`prisma.$transaction`) and a hard database-enforced partial unique index:
+```sql
+CREATE UNIQUE INDEX uniq_doc_slot
+ON "Appointment" (doctor_id, slot_start)
+WHERE status IN ('held', 'confirmed');
+```
+Rather than relying solely on application-level `SELECT`-then-`INSERT` checks—which are vulnerable under PostgreSQL `READ COMMITTED` isolation levels—the partial unique index guarantees relational integrity at the database layer. Once a slot is created in `held` or `confirmed` status, any competing concurrent transaction attempting to hold the same `(doctor_id, slot_start)` triggers a relational unique index violation (`P2002`). The application catches this exception and returns HTTP 409 Conflict ("Slot no longer available"). Furthermore, because the unique index is partial (filtered to `held` and `confirmed`), appointments that transition to `cancelled` or `expired` naturally release the slot, allowing legitimate re-booking without schema constraint conflicts. On SQLite (used for local testing), file-level write serialization provides additional concurrency protection.
 
 ## 2. Doctor Leave Conflict Handling
 When an Admin marks a doctor as on leave for a specific date (`YYYY-MM-DD`), an automated event-driven workflow guarantees immediate patient notification and appointment cleanup. The system queries all `confirmed` and `held` appointments for that doctor on the specified date inside a database transaction, updates their status to `cancelled`, and emits a `leave.conflict` event for each affected record. Asynchronous event listeners pick up these events to dispatch urgent email notifications detailing the leave context and instructions for rescheduling. Furthermore, associated Google Calendar events are automatically removed via the Calendar API, maintaining schedule alignment across both doctor and patient accounts.

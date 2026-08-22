@@ -2,6 +2,16 @@ import { prisma } from './db/prisma';
 import { hashPassword } from './utils/auth';
 
 export async function seedDatabase() {
+  // Ensure DB-level Partial Unique Index exists: WHERE status IN ('held', 'confirmed')
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE UNIQUE INDEX IF NOT EXISTS uniq_doc_slot 
+      ON "Appointment" (doctor_id, slot_start) 
+      WHERE status IN ('held', 'confirmed');
+    `);
+  } catch (idxErr) {
+    console.warn('[DB Partial Index Init]:', idxErr);
+  }
   const existingAdmin = await prisma.user.findFirst({ where: { role: 'admin' } });
   if (existingAdmin) {
     console.log('Database already contains admin account. Skipping seed.');

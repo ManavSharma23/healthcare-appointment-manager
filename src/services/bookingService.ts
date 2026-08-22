@@ -78,7 +78,7 @@ export async function createSlotHold(patientId: string, doctorId: string, slotSt
     if (error instanceof SlotUnavailableError || error.name === 'SlotUnavailableError') {
       throw error;
     }
-    // Handle Prisma error or SQLite write contention during parallel requests
+    // DB-level Partial Unique Index Defense (P2002) and SQLite file-lock write contention
     if (
       (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') ||
       error.message?.includes('timed out') ||
