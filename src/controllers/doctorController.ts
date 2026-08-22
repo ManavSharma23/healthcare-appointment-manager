@@ -90,6 +90,11 @@ export async function submitNotes(req: AuthenticatedRequest, res: Response) {
     return res.status(404).json({ error: 'Appointment not found' });
   }
 
+  // FIX: Backend Guard - Only allow notes submission for confirmed or completed appointments
+  if (appointment.status !== 'confirmed' && appointment.status !== 'completed') {
+    return res.status(400).json({ error: 'Clinical notes can only be submitted for confirmed or completed appointments' });
+  }
+
   const prescriptionJson = prescription ? JSON.stringify(prescription) : null;
 
   // Generate Post-Visit LLM Summary

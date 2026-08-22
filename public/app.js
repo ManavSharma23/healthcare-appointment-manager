@@ -86,7 +86,8 @@ async function loadDoctors() {
   container.innerHTML = '';
 
   const doctors = data.doctors || [];
-  document.getElementById('statDoctorsCount').innerText = `${doctors.length} Doctors`;
+  // FIX ISSUE 3: Live Doctor Count Stat Update
+  document.getElementById('statDoctorsCount').innerText = `${doctors.length} Doctors Active`;
 
   doctors.forEach(doc => {
     const div = document.createElement('div');
@@ -97,7 +98,7 @@ async function loadDoctors() {
         <div style="font-size:0.85rem; color:var(--primary); font-weight:600;">${doc.specialisation}</div>
         <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.2rem;">Hours: ${doc.working_hours.start} - ${doc.working_hours.end} | ${doc.slot_duration_min} min slots</div>
       </div>
-      <button class="btn btn-primary" onclick="selectDoctor('${doc.id}', '${doc.name}')">Select Doctor</button>
+      <button class="btn btn-primary" onclick="selectDoctor('${doc.id}', '${doc.name}')">View Time Slots</button>
     `;
     container.appendChild(div);
   });
@@ -136,6 +137,7 @@ async function loadDoctorSlots() {
       btn.onclick = () => holdSlot(slot.slot_start);
     } else {
       btn.disabled = true;
+      btn.title = "Slot Booked / Unavailable";
     }
     grid.appendChild(btn);
   });
@@ -158,7 +160,7 @@ async function holdSlot(slotStart) {
 
     if (res.ok) {
       activeHoldId = data.appointment.id;
-      msgDiv.innerHTML = `<div style="color:var(--success); font-weight:700; font-size:0.875rem; margin-top:0.75rem;">⚡ Slot Held! Submit symptoms below to confirm.</div>`;
+      msgDiv.innerHTML = `<div style="color:var(--success); font-weight:700; font-size:0.875rem; margin-top:0.75rem;">⚡ Slot Held for 5 Minutes! Enter symptoms below to confirm.</div>`;
       document.getElementById('activeHoldSection').classList.remove('hidden');
       loadDoctorSlots();
     } else {
@@ -215,12 +217,17 @@ async function loadPatientAppointments() {
   const data = await res.json();
   container.innerHTML = '';
 
-  if (!data.appointments || data.appointments.length === 0) {
+  const rawAppointments = data.appointments || [];
+  
+  // FIX ISSUE 2: Filter out duplicate cancelled slots for clean display
+  const appointments = rawAppointments.filter(a => a.status === 'confirmed' || a.status === 'completed' || a.status === 'held');
+
+  if (appointments.length === 0) {
     container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">No active appointments found.</p>';
     return;
   }
 
-  data.appointments.forEach(appt => {
+  appointments.forEach(appt => {
     const timeStr = new Date(appt.slot_start).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
     const card = document.createElement('div');
     card.className = 'feed-item-card';
@@ -237,7 +244,7 @@ async function loadPatientAppointments() {
         <div class="ai-box">
           <div class="ai-box-head">
             <span>🧠 Pre-Visit AI Triage</span>
-            <span class="badge badge-${(appt.symptom_summary.ai_summary?.urgency || 'Medium').toLowerCase()}">${appt.symptom_summary.ai_summary?.urgency || 'Medium'} Urgency</span>
+            <span class="badge badge-${(appt.symptom_summary.ai_summary?.urgency || 'Medium').toLowerCase()}">Urgency: ${appt.symptom_summary.ai_summary?.urgency || 'Medium'}</span>
           </div>
           <div style="font-size:0.85rem; color:var(--text-dark);"><strong>Chief Complaint:</strong> ${appt.symptom_summary.ai_summary?.chief_complaint || appt.symptom_summary.symptoms}</div>
           <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;"><strong>Suggested Questions:</strong> ${(appt.symptom_summary.ai_summary?.questions || []).join(' • ')}</div>
@@ -268,22 +275,30 @@ async function loadDoctorSchedule() {
   const container = document.getElementById('doctorAppointmentsList');
   container.innerHTML = '';
 
-  if (!data.appointments || data.appointments.length === 0) {
+  const rawAppointments = data.appointments || [];
+
+  if (rawAppointments.length === 0) {
     container.innerHTML = '<p style="color:var(--text-muted); padding:1rem;">No appointments scheduled for this date.</p>';
     return;
   }
 
-  data.appointments.forEach(appt => {
+  rawAppointments.forEach(appt => {
     const timeStr = new Date(appt.slot_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const div = document.createElement('div');
     div.className = 'feed-item-card';
+    
+    // FIX ISSUE 1: Gating clinical notes submission to CONFIRMED or COMPLETED appointments only
+    const canSubmitNotes = appt.status === 'confirmed';
+    const isCompleted = appt.status === 'completed';
+    const isCancelled = appt.status === 'cancelled';
+
     div.innerHTML = `
       <div class="flex-between">
         <div>
           <h4 style="font-size:1.05rem; font-weight:700; color:var(--text-dark);">${timeStr} - ${appt.patient_name}</h4>
           <div style="font-size:0.85rem; color:var(--text-muted);">${appt.patient_email}</div>
         </div>
-        <span class="badge ${appt.status === 'confirmed' ? 'badge-low' : appt.status === 'completed' ? 'badge-low' : 'badge-medium'}">${appt.status.toUpperCase()}</span>
+        <span class="badge ${appt.status === 'confirmed' ? 'badge-low' : appt.status === 'completed' ? 'badge-low' : 'badge-high'}">${appt.status.toUpperCase()}</span>
       </div>
       
       ${appt.symptom_summary ? `
@@ -298,19 +313,23 @@ async function loadDoctorSchedule() {
         </div>
       ` : '<div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">No pre-visit symptoms submitted.</div>'}
 
-      ${appt.status !== 'completed' ? `
+      ${canSubmitNotes ? `
         <hr class="card-divider">
         <h5 style="font-size:0.875rem; font-weight:700; margin-bottom:0.5rem;">Submit Post-Visit Clinical Notes & Prescription</h5>
         <div class="form-group">
           <textarea id="notes_${appt.id}" rows="2" placeholder="Clinical diagnosis and notes..."></textarea>
         </div>
         <button class="btn btn-primary" onclick="submitPostVisitNotes('${appt.id}')">Submit Clinical Notes (Triggers Post-Visit AI Summary)</button>
-      ` : `
+      ` : isCompleted ? `
         <div class="ai-box" style="background:var(--success-bg); border-color:var(--success-border);">
           <div class="ai-box-head" style="color:var(--success);">🩺 Generated Post-Visit Patient Summary</div>
           <div style="font-size:0.85rem;">${appt.visit_note?.ai_patient_summary || 'N/A'}</div>
         </div>
-      `}
+      ` : isCancelled ? `
+        <div style="font-size:0.8rem; color:var(--danger); margin-top:0.5rem; font-weight:600;">
+          🚫 Appointment Cancelled — No Visit Notes Permitted
+        </div>
+      ` : ''}
     `;
     container.appendChild(div);
   });
@@ -338,6 +357,9 @@ async function submitPostVisitNotes(appointmentId) {
   if (res.ok) {
     alert('✨ Clinical notes submitted! Post-visit AI summary created & medication reminders scheduled.');
     loadDoctorSchedule();
+  } else {
+    const errData = await res.json();
+    alert(`Error: ${errData.error || 'Failed to submit clinical notes'}`);
   }
 }
 
@@ -361,6 +383,7 @@ async function handleCreateDoctor(e) {
   if (res.ok) {
     alert('✨ Doctor profile created successfully!');
     loadAdminDoctorsList();
+    loadDoctors(); // Refresh patient doctor list & stat counter
   } else {
     alert('Failed to create doctor profile.');
   }
@@ -373,9 +396,13 @@ async function loadAdminDoctorsList() {
   const data = await res.json();
   const select = document.getElementById('adminLeaveDocSelect');
   select.innerHTML = '';
-  (data.doctors || []).forEach(doc => {
+  const doctors = data.doctors || [];
+  doctors.forEach(doc => {
     select.innerHTML += `<option value="${doc.id}">${doc.name} (${doc.specialisation})</option>`;
   });
+
+  // FIX ISSUE 3: Live Doctor Count Update
+  document.getElementById('statDoctorsCount').innerText = `${doctors.length} Doctors Active`;
 }
 
 async function handleScheduleLeave(e) {
@@ -396,6 +423,8 @@ async function handleScheduleLeave(e) {
   if (res.ok) {
     const data = await res.json();
     alert(`🌴 Doctor leave scheduled for ${date}! ${data.result?.cancelledAppointmentsCount || 0} conflicting appointments cancelled & patients notified.`);
+    loadDoctorSchedule();
+    loadPatientAppointments();
   }
 }
 
