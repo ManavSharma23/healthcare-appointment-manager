@@ -86,8 +86,7 @@ async function loadDoctors() {
   container.innerHTML = '';
 
   const doctors = data.doctors || [];
-  // FIX ISSUE 3: Live Doctor Count Stat Update
-  document.getElementById('statDoctorsCount').innerText = `${doctors.length} Doctors Active`;
+  document.getElementById('statDoctorsCount').innerText = `${doctors.length} Doctors`;
 
   doctors.forEach(doc => {
     const div = document.createElement('div');
@@ -124,7 +123,7 @@ async function loadDoctorSlots() {
   grid.innerHTML = '';
 
   if (data.message) {
-    grid.innerHTML = `<div style="grid-column: 1/-1; color:var(--danger); font-size:0.9rem; padding:0.5rem 0;">⚠️ ${data.message}</div>`;
+    grid.innerHTML = `<div style="grid-column: 1/-1; color:var(--danger); font-size:0.9rem; padding:0.5rem 0;">${data.message}</div>`;
     return;
   }
 
@@ -137,7 +136,7 @@ async function loadDoctorSlots() {
       btn.onclick = () => holdSlot(slot.slot_start);
     } else {
       btn.disabled = true;
-      btn.title = "Slot Booked / Unavailable";
+      btn.title = "Slot Unavailable";
     }
     grid.appendChild(btn);
   });
@@ -160,15 +159,15 @@ async function holdSlot(slotStart) {
 
     if (res.ok) {
       activeHoldId = data.appointment.id;
-      msgDiv.innerHTML = `<div style="color:var(--success); font-weight:700; font-size:0.875rem; margin-top:0.75rem;">⚡ Slot Held for 5 Minutes! Enter symptoms below to confirm.</div>`;
+      msgDiv.innerHTML = `<div style="color:var(--success); font-weight:700; font-size:0.875rem; margin-top:0.75rem;">Slot Held for 5 Minutes. Enter symptoms below to confirm.</div>`;
       document.getElementById('activeHoldSection').classList.remove('hidden');
       loadDoctorSlots();
     } else {
-      msgDiv.innerHTML = `<div style="color:var(--danger); font-weight:700; font-size:0.875rem; margin-top:0.75rem;">🚫 ${data.error || 'Slot no longer available'}</div>`;
+      msgDiv.innerHTML = `<div style="color:var(--danger); font-weight:700; font-size:0.875rem; margin-top:0.75rem;">${data.error || 'Slot no longer available'}</div>`;
       loadDoctorSlots();
     }
   } catch (err) {
-    msgDiv.innerHTML = `<div style="color:var(--danger);">Network Error</div>`;
+    msgDiv.innerHTML = `<div style="color:var(--danger);">Network Connection Error</div>`;
   }
 }
 
@@ -197,7 +196,7 @@ async function submitSymptomsAndConfirm() {
   });
 
   if (res.ok) {
-    alert('✨ Appointment Confirmed! Pre-visit AI summary generated & Google Calendar synced.');
+    alert('Appointment Confirmed. Pre-visit AI summary generated & Google Calendar synchronized.');
     document.getElementById('activeHoldSection').classList.add('hidden');
     document.getElementById('symptomsInput').value = '';
     activeHoldId = null;
@@ -209,7 +208,7 @@ async function submitSymptomsAndConfirm() {
 
 async function loadPatientAppointments() {
   const container = document.getElementById('patientAppointmentsList');
-  container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Loading appointments...</p>';
+  container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Loading active appointments...</p>';
 
   const res = await fetch(`${API_BASE}/doctors/appointments`, {
     headers: { 'Authorization': `Bearer ${tokens.doctor}` }
@@ -218,8 +217,6 @@ async function loadPatientAppointments() {
   container.innerHTML = '';
 
   const rawAppointments = data.appointments || [];
-  
-  // FIX ISSUE 2: Filter out duplicate cancelled slots for clean display
   const appointments = rawAppointments.filter(a => a.status === 'confirmed' || a.status === 'completed' || a.status === 'held');
 
   if (appointments.length === 0) {
@@ -243,7 +240,7 @@ async function loadPatientAppointments() {
       ${appt.symptom_summary ? `
         <div class="ai-box">
           <div class="ai-box-head">
-            <span>🧠 Pre-Visit AI Triage</span>
+            <span>Pre-Visit AI Triage</span>
             <span class="badge badge-${(appt.symptom_summary.ai_summary?.urgency || 'Medium').toLowerCase()}">Urgency: ${appt.symptom_summary.ai_summary?.urgency || 'Medium'}</span>
           </div>
           <div style="font-size:0.85rem; color:var(--text-dark);"><strong>Chief Complaint:</strong> ${appt.symptom_summary.ai_summary?.chief_complaint || appt.symptom_summary.symptoms}</div>
@@ -254,7 +251,7 @@ async function loadPatientAppointments() {
       ${appt.visit_note?.ai_patient_summary ? `
         <div class="ai-box" style="background:var(--success-bg); border-color:var(--success-border);">
           <div class="ai-box-head" style="color:var(--success);">
-            <span>🩺 Patient-Friendly Post-Visit Summary</span>
+            <span>Patient-Friendly Post-Visit Summary</span>
           </div>
           <div style="font-size:0.85rem; color:var(--text-dark);">${appt.visit_note.ai_patient_summary}</div>
         </div>
@@ -287,7 +284,6 @@ async function loadDoctorSchedule() {
     const div = document.createElement('div');
     div.className = 'feed-item-card';
     
-    // FIX ISSUE 1: Gating clinical notes submission to CONFIRMED or COMPLETED appointments only
     const canSubmitNotes = appt.status === 'confirmed';
     const isCompleted = appt.status === 'completed';
     const isCancelled = appt.status === 'cancelled';
@@ -304,12 +300,12 @@ async function loadDoctorSchedule() {
       ${appt.symptom_summary ? `
         <div class="ai-box">
           <div class="ai-box-head">
-            <span>🧠 Pre-Visit AI Triage Summary</span>
+            <span>Pre-Visit AI Triage Summary</span>
             <span class="badge badge-${(appt.symptom_summary.ai_summary?.urgency || 'Medium').toLowerCase()}">${appt.symptom_summary.ai_summary?.urgency || 'Medium'} Urgency</span>
           </div>
           <div style="font-size:0.85rem;"><strong>Symptoms:</strong> ${appt.symptom_summary.symptoms}</div>
           <div style="font-size:0.85rem; margin-top:0.2rem;"><strong>Chief Complaint:</strong> ${appt.symptom_summary.ai_summary?.chief_complaint || 'N/A'}</div>
-          <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;"><strong>3 Suggested Questions for Doctor:</strong><br> ${ (appt.symptom_summary.ai_summary?.questions || []).map(q => `• ${q}`).join('<br>') }</div>
+          <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;"><strong>Suggested Questions for Doctor:</strong><br> ${ (appt.symptom_summary.ai_summary?.questions || []).map(q => `• ${q}`).join('<br>') }</div>
         </div>
       ` : '<div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">No pre-visit symptoms submitted.</div>'}
 
@@ -322,12 +318,12 @@ async function loadDoctorSchedule() {
         <button class="btn btn-primary" onclick="submitPostVisitNotes('${appt.id}')">Submit Clinical Notes (Triggers Post-Visit AI Summary)</button>
       ` : isCompleted ? `
         <div class="ai-box" style="background:var(--success-bg); border-color:var(--success-border);">
-          <div class="ai-box-head" style="color:var(--success);">🩺 Generated Post-Visit Patient Summary</div>
+          <div class="ai-box-head" style="color:var(--success);">Generated Post-Visit Patient Summary</div>
           <div style="font-size:0.85rem;">${appt.visit_note?.ai_patient_summary || 'N/A'}</div>
         </div>
       ` : isCancelled ? `
         <div style="font-size:0.8rem; color:var(--danger); margin-top:0.5rem; font-weight:600;">
-          🚫 Appointment Cancelled — No Visit Notes Permitted
+          Appointment Cancelled — No Visit Notes Permitted
         </div>
       ` : ''}
     `;
@@ -355,7 +351,7 @@ async function submitPostVisitNotes(appointmentId) {
   });
 
   if (res.ok) {
-    alert('✨ Clinical notes submitted! Post-visit AI summary created & medication reminders scheduled.');
+    alert('Clinical notes submitted. Post-visit AI summary generated & medication reminders scheduled.');
     loadDoctorSchedule();
   } else {
     const errData = await res.json();
@@ -381,9 +377,9 @@ async function handleCreateDoctor(e) {
   });
 
   if (res.ok) {
-    alert('✨ Doctor profile created successfully!');
+    alert('Doctor profile created successfully.');
     loadAdminDoctorsList();
-    loadDoctors(); // Refresh patient doctor list & stat counter
+    loadDoctors();
   } else {
     alert('Failed to create doctor profile.');
   }
@@ -401,8 +397,7 @@ async function loadAdminDoctorsList() {
     select.innerHTML += `<option value="${doc.id}">${doc.name} (${doc.specialisation})</option>`;
   });
 
-  // FIX ISSUE 3: Live Doctor Count Update
-  document.getElementById('statDoctorsCount').innerText = `${doctors.length} Doctors Active`;
+  document.getElementById('statDoctorsCount').innerText = `${doctors.length} Doctors`;
 }
 
 async function handleScheduleLeave(e) {
@@ -422,7 +417,7 @@ async function handleScheduleLeave(e) {
 
   if (res.ok) {
     const data = await res.json();
-    alert(`🌴 Doctor leave scheduled for ${date}! ${data.result?.cancelledAppointmentsCount || 0} conflicting appointments cancelled & patients notified.`);
+    alert(`Doctor leave scheduled for ${date}. ${data.result?.cancelledAppointmentsCount || 0} conflicting appointments cancelled.`);
     loadDoctorSchedule();
     loadPatientAppointments();
   }
@@ -438,7 +433,7 @@ async function loadFailedNotifications() {
   container.innerHTML = '';
 
   if (!data.failedNotifications || data.failedNotifications.length === 0) {
-    container.innerHTML = '<div style="color:var(--success); font-weight:600; font-size:0.85rem; padding:1rem 0;">✅ All notifications delivered cleanly! Dead-letter queue is empty.</div>';
+    container.innerHTML = '<div style="color:var(--success); font-weight:600; font-size:0.85rem; padding:1rem 0;">All notifications delivered. Dead-letter queue is empty.</div>';
     return;
   }
 
@@ -450,7 +445,7 @@ async function loadFailedNotifications() {
         <strong style="color:var(--danger);">${notif.type.toUpperCase()}</strong> (${notif.channel})<br>
         <small style="color:var(--text-muted);">User: ${notif.user?.email || 'N/A'} | Retries: ${notif.retry_count}/3</small>
       </div>
-      <button class="btn btn-outline" onclick="retryFailedNotification('${notif.id}')">🔄 Retry Delivery</button>
+      <button class="btn btn-outline" onclick="retryFailedNotification('${notif.id}')">Retry Delivery</button>
     `;
     container.appendChild(div);
   });
@@ -461,7 +456,7 @@ async function retryFailedNotification(id) {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${tokens.admin}` }
   });
-  alert('Notification requeued for retry!');
+  alert('Notification requeued for retry.');
   loadFailedNotifications();
 }
 

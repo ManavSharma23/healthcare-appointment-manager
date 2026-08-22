@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PulseCare | Professional Healthcare Appointment & AI Clinical Portal</title>
+  <title>PulseCare Clinical Portal | Enterprise Healthcare Platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -11,30 +11,32 @@
 </head>
 <body>
 
-  <!-- Top Announcement Bar -->
+  <!-- Enterprise System Bar -->
   <div class="top-announcement">
     <div class="container announcement-content">
-      <span>🛡️ <strong>System Status:</strong> Concurrency Lock Active • AI Triage Engine Ready • Google Calendar OAuth Synced</span>
-      <span class="live-badge"><span class="pulse-dot"></span> System Live</span>
+      <span>System Status: <strong>Operational</strong> | Concurrency Engine: Active | Google OAuth: Connected</span>
+      <span class="live-badge"><span class="pulse-dot"></span> System Online</span>
     </div>
   </div>
 
-  <!-- Header / Navigation -->
+  <!-- Main Navigation Header -->
   <header class="navbar">
     <div class="logo">
-      <div class="logo-symbol">➕</div>
-      <div class="logo-brand">Pulse<span>Care</span> <small class="brand-tag">Clinical Portal</small></div>
+      <div class="logo-symbol">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+      </div>
+      <div class="logo-brand">Pulse<span>Care</span> <span class="brand-tag">Enterprise</span></div>
     </div>
     
     <nav class="nav-tabs">
       <button class="nav-tab active" onclick="switchDashboard('patient')">
-        <span class="tab-icon">👤</span> Patient Portal
+        Patient Portal
       </button>
       <button class="nav-tab" onclick="switchDashboard('doctor')">
-        <span class="tab-icon">🩺</span> Doctor Workstation
+        Doctor Workstation
       </button>
       <button class="nav-tab" onclick="switchDashboard('admin')">
-        <span class="tab-icon">🛡️</span> Admin Console
+        Administration
       </button>
     </nav>
     
@@ -47,32 +49,40 @@
     </div>
   </header>
 
-  <!-- Hero Metrics Header -->
+  <!-- Metrics Overview Banner -->
   <div class="metrics-banner">
     <div class="container grid-4">
       <div class="metric-card">
-        <div class="metric-icon">👨‍⚕️</div>
+        <div class="metric-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
         <div>
           <div class="metric-value" id="statDoctorsCount">2 Doctors</div>
-          <div class="metric-label">Board Certified Specialists</div>
+          <div class="metric-label">Active Specialists</div>
         </div>
       </div>
       <div class="metric-card">
-        <div class="metric-icon">🔒</div>
+        <div class="metric-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
         <div>
-          <div class="metric-value">100% Locked</div>
+          <div class="metric-value">100% Protected</div>
           <div class="metric-label">Double-Booking Defense</div>
         </div>
       </div>
       <div class="metric-card">
-        <div class="metric-icon">🧠</div>
+        <div class="metric-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
         <div>
-          <div class="metric-value">Gemini AI</div>
-          <div class="metric-label">Pre & Post Visit Summaries</div>
+          <div class="metric-value">Gemini 1.5 LLM</div>
+          <div class="metric-label">Clinical AI Triage</div>
         </div>
       </div>
       <div class="metric-card">
-        <div class="metric-icon">📅</div>
+        <div class="metric-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+        </div>
         <div>
           <div class="metric-value">OAuth 2.0</div>
           <div class="metric-label">Google Calendar Sync</div>
@@ -89,33 +99,32 @@
       <div class="panel-header">
         <div>
           <span class="section-badge">Patient Portal</span>
-          <h2>Book Appointment & Submit Symptoms</h2>
-          <p>Find doctors, reserve time slots with 5-minute hold protection, and receive AI-assisted symptom summaries.</p>
+          <h2>Appointments & AI Pre-Visit Triage</h2>
+          <p>Select a specialist, hold available slots with 5-minute concurrency protection, and submit symptom notes.</p>
         </div>
-        <button class="btn btn-outline" onclick="loadDoctors()">🔄 Refresh Available Doctors</button>
+        <button class="btn btn-outline" onclick="loadDoctors()">Refresh Directory</button>
       </div>
 
       <div class="grid-layout-2">
-        <!-- Doctor Search & Slot Picker -->
+        <!-- Doctor Search & Slot Selection -->
         <div class="content-card">
           <div class="card-head">
             <div class="step-circle">1</div>
             <div>
               <h3>Select Doctor & Reserve Time Slot</h3>
-              <p class="card-sub">Real-time availability with atomic DB concurrency lock</p>
+              <p class="card-sub">Real-time slot reservation backed by transactional DB locks</p>
             </div>
           </div>
           
           <div class="search-bar-wrap">
-            <span class="search-icon">🔍</span>
-            <input type="text" id="patientSpecFilter" placeholder="Filter by specialization (Cardiology, Dermatology...)" oninput="loadDoctors()">
+            <input type="text" id="patientSpecFilter" placeholder="Search by specialization (Cardiology, Dermatology...)" oninput="loadDoctors()">
           </div>
           
           <div id="doctorList" class="doctor-cards-stack"></div>
 
           <div id="slotPickerSection" class="slot-selection-panel hidden">
             <div class="slot-panel-head">
-              <h4>Available Slots for <span id="selectedDoctorName" class="doctor-highlight">Dr. Sarah Jenkins</span></h4>
+              <h4>Available Slots: <span id="selectedDoctorName" class="doctor-highlight">Dr. Sarah Jenkins</span></h4>
               <div class="date-picker-box">
                 <label>Date: </label>
                 <input type="date" id="bookingDate" onchange="loadDoctorSlots()">
@@ -125,7 +134,7 @@
             <div class="slot-legend">
               <span class="legend-item"><span class="dot dot-available"></span> Available</span>
               <span class="legend-item"><span class="dot dot-held"></span> 5-Min Hold Active</span>
-              <span class="legend-item"><span class="dot dot-booked"></span> Booked</span>
+              <span class="legend-item"><span class="dot dot-booked"></span> Reserved / Unavailable</span>
             </div>
 
             <div id="slotGrid" class="slots-grid"></div>
@@ -133,33 +142,33 @@
           </div>
         </div>
 
-        <!-- Pre-Visit Symptom Form & Appointments Feed -->
+        <!-- Pre-Visit Symptom Submission & History -->
         <div class="content-card">
           <div class="card-head">
             <div class="step-circle">2</div>
             <div>
-              <h3>Pre-Visit Symptoms & AI Summaries</h3>
-              <p class="card-sub">AI analyzes your symptoms for urgency and suggested questions</p>
+              <h3>Symptom Intake & Clinical Summaries</h3>
+              <p class="card-sub">Pre-visit symptom intake processed via structured LLM prompt</p>
             </div>
           </div>
 
           <div id="activeHoldSection" class="hold-active-banner hidden">
             <div class="hold-timer-head">
-              <span class="timer-badge">⏱️ 5-Minute Hold Active</span>
-              <span class="hold-sub">Slot reserved! Complete details to confirm.</span>
+              <span class="timer-badge">5-Minute Slot Hold Active</span>
+              <span class="hold-sub">Slot locked against double-booking. Complete symptoms to confirm.</span>
             </div>
             
             <div class="form-group">
-              <label>Describe your Symptoms (Detailed for AI Analysis)</label>
-              <textarea id="symptomsInput" rows="3" placeholder="e.g. Sharp chest pressure when climbing stairs, mild shortness of breath for 3 days..."></textarea>
+              <label>Describe Clinical Symptoms</label>
+              <textarea id="symptomsInput" rows="3" placeholder="Describe symptoms, duration, and severity for pre-visit doctor triage..."></textarea>
             </div>
-            <button class="btn btn-primary btn-glow btn-full" onclick="submitSymptomsAndConfirm()">
-              ⚡ Submit Symptoms & Confirm Appointment
+            <button class="btn btn-primary btn-full" onclick="submitSymptomsAndConfirm()">
+              Submit Symptoms & Confirm Booking
             </button>
           </div>
 
           <div class="history-title">
-            <h4>My Confirmed Appointments & Summaries</h4>
+            <h4>Active Appointments & Visit Summaries</h4>
           </div>
           <div id="patientAppointmentsList" class="feed-container"></div>
         </div>
@@ -171,8 +180,8 @@
       <div class="panel-header">
         <div>
           <span class="section-badge">Doctor Workstation</span>
-          <h2>Clinical Schedule & Patient Summaries</h2>
-          <p>Inspect daily appointments, view AI symptom urgency triages, and submit post-visit prescriptions.</p>
+          <h2>Clinical Schedule & Patient Records</h2>
+          <p>Review patient pre-visit AI symptom summaries and submit post-visit notes and prescriptions.</p>
         </div>
         <div class="date-select-group">
           <label>Filter Date: </label>
@@ -189,25 +198,25 @@
     <section id="adminDashboard" class="dashboard-panel">
       <div class="panel-header">
         <div>
-          <span class="section-badge">Admin Console</span>
-          <h2>Doctor Management & Dead-Letter Log</h2>
-          <p>Create doctor profiles, schedule doctor leaves with automatic conflict resolution, and monitor failed notifications.</p>
+          <span class="section-badge">Administration Console</span>
+          <h2>Doctor Profiles & System Operations</h2>
+          <p>Manage specialist accounts, schedule doctor leaves with conflict resolution, and monitor failed notifications.</p>
         </div>
       </div>
 
       <div class="grid-layout-2">
         <div class="content-card">
           <div class="card-head">
-            <div class="step-circle">➕</div>
+            <div class="step-circle">+</div>
             <div>
               <h3>Create Doctor Profile</h3>
-              <p class="card-sub">Register new specialist accounts</p>
+              <p class="card-sub">Register new doctor account</p>
             </div>
           </div>
 
           <form onsubmit="handleCreateDoctor(event)" class="form-grid">
             <div class="form-group">
-              <label>Doctor Name</label>
+              <label>Doctor Full Name</label>
               <input type="text" id="adminDocName" required placeholder="Dr. Marcus Vance">
             </div>
             <div class="form-group">
@@ -222,13 +231,13 @@
               <label>Specialization</label>
               <input type="text" id="adminDocSpec" required placeholder="Neurology">
             </div>
-            <button type="submit" class="btn btn-primary btn-full">Create Doctor Profile</button>
+            <button type="submit" class="btn btn-primary btn-full">Create Doctor Account</button>
           </form>
 
           <hr class="card-divider">
 
           <div class="card-head">
-            <div class="step-circle">🌴</div>
+            <div class="step-circle">L</div>
             <div>
               <h3>Schedule Doctor Leave</h3>
               <p class="card-sub">Cancels conflicting slots & dispatches patient notifications</p>
@@ -246,7 +255,7 @@
             </div>
             <div class="form-group">
               <label>Reason</label>
-              <input type="text" id="adminLeaveReason" placeholder="Medical Conference / Personal Leave">
+              <input type="text" id="adminLeaveReason" placeholder="Medical Conference / Annual Leave">
             </div>
             <button type="submit" class="btn btn-warning btn-full">Schedule Leave & Resolve Conflicts</button>
           </form>
@@ -256,13 +265,13 @@
         <div class="content-card">
           <div class="card-head flex-between">
             <div class="flex-row">
-              <div class="step-circle">📮</div>
+              <div class="step-circle">N</div>
               <div>
                 <h3>Failed Notifications Log</h3>
                 <p class="card-sub">Dead-letter queue retry monitoring</p>
               </div>
             </div>
-            <button class="btn btn-outline" onclick="loadFailedNotifications()">🔄 Refresh Log</button>
+            <button class="btn btn-outline" onclick="loadFailedNotifications()">Refresh Log</button>
           </div>
 
           <div id="failedNotificationsList" class="feed-container"></div>
@@ -276,7 +285,7 @@
   <footer class="footer">
     <div class="container footer-flex">
       <div class="footer-brand">
-        <strong>PulseCare Platform</strong> • Enterprise Healthcare & Follow-up Suite
+        <strong>PulseCare Platform</strong> • Clinical Healthcare Application
       </div>
       <div class="footer-links">
         <span>Prisma ORM</span> • <span>PostgreSQL / SQLite</span> • <span>Gemini LLM API</span> • <span>Google Calendar Sync</span>
