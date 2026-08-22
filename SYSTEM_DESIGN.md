@@ -1,0 +1,16 @@
+# System Design Write-up: Healthcare Appointment & Follow-up Manager
+
+## 1. Double-Booking Prevention & Concurrency Control
+Double-booking under high request concurrency is mitigated via a multi-tiered defense strategy combining database transactions (`prisma.$transaction`) and a hard hardware-enforced relational unique constraint. Rather than relying solely on application-level `SELECT`-then-`INSERT` checks—which fail during concurrent request races—the database layer enforces a partial unique index on `appointments(doctor_id, slot_start) WHERE status IN ('held', 'confirmed')`. When simultaneous booking requests target the exact same time slot, only one database transaction succeeds in writing the row; all competing concurrent requests trigger a relational unique index violation (`P2002`). The application catches this error instantly and returns an HTTP 409 Conflict ("Slot no longer available"), ensuring zero double-bookings regardless of load.
+
+## 2. Doctor Leave Conflict Handling
+When an Admin marks a doctor as on leave for a specific date (`YYYY-MM-DD`), an automated event-driven workflow guarantees immediate patient notification and appointment cleanup. The system queries all `confirmed` and `held` appointments for that doctor on the specified date inside a database transaction, updates their status to `cancelled`, and emits a `leave.conflict` event for each affected record. Asynchronous event listeners pick up these events to dispatch urgent email notifications detailing the leave context and instructions for rescheduling. Furthermore, associated Google Calendar events are automatically removed via the Calendar API, maintaining schedule alignment across both doctor and patient accounts.
+
+## 3. Slot Hold Mechanism & Lifecycle
+To prevent abandoned bookings from permanently blocking doctor availability, the platform implements a 5-minute transactional slot hold pattern:
+1. **Hold Creation**: Upon selecting a slot, `POST /patients/appointments` creates an appointment with status `held` and `expires_at = now() + 5 min`.
+2. **Confirmation**: When the patient submits pre-visit symptoms and confirms, `POST /patients/appointments/:id/confirm` atomically transitions status from `held` to `confirmed` and clears `expires_at`.
+3. **Expiration Cleanup**: A background worker polling every 60 seconds scans for appointments where `status = 'held'` and `expires_at < now()`, automatically transitioning them to `cancelled` to release the slot back to the public pool.
+
+## 4. Notification Failure & Retry Architecture
+Notifications for email and Google Calendar synchronization are fully decoupled from core HTTP booking endpoints via an event-driven architecture (`EventEmitter` / message queue), ensuring slow external SMTP or API response times never block user requests. Every dispatch attempt creates a record in the `notifications` table with status `pending`. On delivery failure, the status updates to `failed` with an incremented `retry_count` and exponential backoff timestamp (`1 min` → `5 min` → `15 min`). A background worker retries failed entries up to 3 times; if retries are exhausted, the notification is routed to a permanent dead-letter log accessible on the Admin Dashboard for manual monitoring and execution.
