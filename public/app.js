@@ -10,9 +10,15 @@ const tokens = {
 };
 
 const userDetails = {
-  patient: { role: 'Patient Account', email: 'patient@clinic.com', avatar: 'P' },
-  doctor: { role: 'Doctor Workstation', email: 'doctor@clinic.com', avatar: 'D' },
-  admin: { role: 'Admin Console', email: 'admin@clinic.com', avatar: 'A' },
+  patient: { role: 'Patient Account', email: 'patient@clinic.com' },
+  doctor: { role: 'Doctor Workstation', email: 'doctor@clinic.com' },
+  admin: { role: 'Administration Console', email: 'admin@clinic.com' },
+};
+
+const portalTitles = {
+  patient: { title: 'Patient Scheduling & Intake', sub: 'Select doctor, reserve ledger slots, and review AI clinical triages' },
+  doctor: { title: 'Doctor Workstation', sub: 'Inspect daily appointment schedule, AI symptom summaries, and clinical notes' },
+  admin: { title: 'Administration Console', sub: 'Manage doctor accounts, schedule leaves with conflict handling, and monitor dead-letter logs' },
 };
 
 async function init() {
@@ -47,21 +53,28 @@ async function init() {
   }
 }
 
+function refreshActivePortal() {
+  switchDashboard(activeRole);
+}
+
 function switchDashboard(role) {
   activeRole = role;
 
-  document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.dashboard-panel').forEach(sec => sec.classList.remove('active'));
 
   document.getElementById(`${role}Dashboard`).classList.add('active');
   
   const tabIndex = role === 'patient' ? 0 : role === 'doctor' ? 1 : 2;
-  document.querySelectorAll('.nav-tab')[tabIndex]?.classList.add('active');
+  document.querySelectorAll('.nav-item')[tabIndex]?.classList.add('active');
 
   const user = userDetails[role];
   document.getElementById('currentRole').innerText = user.role;
   document.getElementById('currentEmail').innerText = user.email;
-  document.getElementById('userAvatar').innerText = user.avatar;
+
+  const headerMeta = portalTitles[role];
+  document.getElementById('workspaceTitle').innerText = headerMeta.title;
+  document.getElementById('workspaceSub').innerText = headerMeta.sub;
 
   if (role === 'patient') {
     loadDoctors();
@@ -86,18 +99,17 @@ async function loadDoctors() {
   container.innerHTML = '';
 
   const doctors = data.doctors || [];
-  document.getElementById('statDoctorsCount').innerText = `${doctors.length} Doctors`;
 
   doctors.forEach(doc => {
     const div = document.createElement('div');
-    div.className = 'doctor-item-box';
+    div.className = 'doctor-ledger-item';
     div.innerHTML = `
       <div>
-        <h4 style="font-weight:700; color:var(--text-dark);">${doc.name}</h4>
-        <div style="font-size:0.85rem; color:var(--primary); font-weight:600;">${doc.specialisation}</div>
-        <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.2rem;">Hours: ${doc.working_hours.start} - ${doc.working_hours.end} | ${doc.slot_duration_min} min slots</div>
+        <div class="doc-name">${doc.name}</div>
+        <div class="doc-spec">${doc.specialisation}</div>
+        <div class="doc-meta">Hours: ${doc.working_hours.start} - ${doc.working_hours.end} | ${doc.slot_duration_min} min slots</div>
       </div>
-      <button class="btn btn-primary" onclick="selectDoctor('${doc.id}', '${doc.name}')">View Time Slots</button>
+      <button class="btn btn-teal btn-sm" onclick="selectDoctor('${doc.id}', '${doc.name}')">View Time Slots</button>
     `;
     container.appendChild(div);
   });
@@ -123,14 +135,14 @@ async function loadDoctorSlots() {
   grid.innerHTML = '';
 
   if (data.message) {
-    grid.innerHTML = `<div style="grid-column: 1/-1; color:var(--danger); font-size:0.9rem; padding:0.5rem 0;">${data.message}</div>`;
+    grid.innerHTML = `<div style="grid-column: 1/-1; color:var(--status-coral); font-size:0.85rem; padding:0.5rem 0;">⚠️ ${data.message}</div>`;
     return;
   }
 
   (data.slots || []).forEach(slot => {
     const btn = document.createElement('button');
-    const timeStr = new Date(slot.slot_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    btn.className = `slot-button ${slot.available ? 'available' : 'disabled'}`;
+    const timeStr = new Date(slot.slot_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    btn.className = `slot-ledger-btn ${slot.available ? 'available' : 'disabled'}`;
     btn.innerText = timeStr;
     if (slot.available) {
       btn.onclick = () => holdSlot(slot.slot_start);
@@ -159,15 +171,15 @@ async function holdSlot(slotStart) {
 
     if (res.ok) {
       activeHoldId = data.appointment.id;
-      msgDiv.innerHTML = `<div style="color:var(--success); font-weight:700; font-size:0.875rem; margin-top:0.75rem;">Slot Held for 5 Minutes. Enter symptoms below to confirm.</div>`;
+      msgDiv.innerHTML = `<div style="color:var(--status-amber); font-weight:600; font-size:0.85rem; margin-top:0.75rem;">Slot Held for 5 Minutes. Enter symptoms below to confirm.</div>`;
       document.getElementById('activeHoldSection').classList.remove('hidden');
       loadDoctorSlots();
     } else {
-      msgDiv.innerHTML = `<div style="color:var(--danger); font-weight:700; font-size:0.875rem; margin-top:0.75rem;">${data.error || 'Slot no longer available'}</div>`;
+      msgDiv.innerHTML = `<div style="color:var(--status-coral); font-weight:600; font-size:0.85rem; margin-top:0.75rem;">${data.error || 'Slot no longer available'}</div>`;
       loadDoctorSlots();
     }
   } catch (err) {
-    msgDiv.innerHTML = `<div style="color:var(--danger);">Network Connection Error</div>`;
+    msgDiv.innerHTML = `<div style="color:var(--status-coral);">Network Connection Error</div>`;
   }
 }
 
@@ -175,7 +187,7 @@ async function submitSymptomsAndConfirm() {
   if (!activeHoldId) return;
   const symptoms = document.getElementById('symptomsInput').value;
   if (!symptoms || symptoms.length < 5) {
-    alert('Please describe your symptoms (minimum 5 characters).');
+    alert('Please describe patient symptoms (minimum 5 characters).');
     return;
   }
 
@@ -227,33 +239,36 @@ async function loadPatientAppointments() {
   appointments.forEach(appt => {
     const timeStr = new Date(appt.slot_start).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
     const card = document.createElement('div');
-    card.className = 'feed-item-card';
+    card.className = 'clinical-feed-card';
     card.innerHTML = `
       <div class="flex-between">
         <div>
-          <strong style="font-size:1rem; color:var(--text-dark);">Doctor Appointment</strong>
-          <div style="font-size:0.8rem; color:var(--text-muted);">${timeStr}</div>
+          <strong style="font-size:0.95rem; color:var(--text-primary);">Doctor Visit</strong>
+          <div class="mono-code" style="margin-top:0.2rem;">${timeStr}</div>
         </div>
-        <span class="badge ${appt.status === 'confirmed' ? 'badge-low' : 'badge-medium'}">${appt.status.toUpperCase()}</span>
+        <span class="urgency-badge ${appt.status === 'confirmed' ? 'urgency-low' : 'urgency-medium'}">${appt.status.toUpperCase()}</span>
       </div>
 
       ${appt.symptom_summary ? `
-        <div class="ai-box">
-          <div class="ai-box-head">
-            <span>Pre-Visit AI Triage</span>
-            <span class="badge badge-${(appt.symptom_summary.ai_summary?.urgency || 'Medium').toLowerCase()}">Urgency: ${appt.symptom_summary.ai_summary?.urgency || 'Medium'}</span>
+        <div class="clinical-triage-card">
+          <div class="triage-card-header">
+            <span class="triage-title">PRE-VISIT AI CLINICAL TRIAGE</span>
+            <span class="urgency-badge urgency-${(appt.symptom_summary.ai_summary?.urgency || 'Medium').toLowerCase()}">Urgency: ${appt.symptom_summary.ai_summary?.urgency || 'Medium'}</span>
           </div>
-          <div style="font-size:0.85rem; color:var(--text-dark);"><strong>Chief Complaint:</strong> ${appt.symptom_summary.ai_summary?.chief_complaint || appt.symptom_summary.symptoms}</div>
-          <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;"><strong>Suggested Questions:</strong> ${(appt.symptom_summary.ai_summary?.questions || []).join(' • ')}</div>
+          <div class="chief-complaint-text">${appt.symptom_summary.ai_summary?.chief_complaint || appt.symptom_summary.symptoms}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.2rem;">Suggested Clinical Questions:</div>
+          <ol class="questions-list">
+            ${(appt.symptom_summary.ai_summary?.questions || []).map(q => `<li>${q}</li>`).join('')}
+          </ol>
         </div>
       ` : ''}
 
       ${appt.visit_note?.ai_patient_summary ? `
-        <div class="ai-box" style="background:var(--success-bg); border-color:var(--success-border);">
-          <div class="ai-box-head" style="color:var(--success);">
-            <span>Patient-Friendly Post-Visit Summary</span>
+        <div class="clinical-triage-card" style="border-left-color:var(--status-green);">
+          <div class="triage-card-header">
+            <span class="triage-title" style="color:var(--status-green);">PATIENT-FRIENDLY POST-VISIT SUMMARY</span>
           </div>
-          <div style="font-size:0.85rem; color:var(--text-dark);">${appt.visit_note.ai_patient_summary}</div>
+          <div style="font-size:0.85rem; color:var(--text-body);">${appt.visit_note.ai_patient_summary}</div>
         </div>
       ` : ''}
     `;
@@ -280,9 +295,9 @@ async function loadDoctorSchedule() {
   }
 
   rawAppointments.forEach(appt => {
-    const timeStr = new Date(appt.slot_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const timeStr = new Date(appt.slot_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     const div = document.createElement('div');
-    div.className = 'feed-item-card';
+    div.className = 'clinical-feed-card';
     
     const canSubmitNotes = appt.status === 'confirmed';
     const isCompleted = appt.status === 'completed';
@@ -291,38 +306,43 @@ async function loadDoctorSchedule() {
     div.innerHTML = `
       <div class="flex-between">
         <div>
-          <h4 style="font-size:1.05rem; font-weight:700; color:var(--text-dark);">${timeStr} - ${appt.patient_name}</h4>
-          <div style="font-size:0.85rem; color:var(--text-muted);">${appt.patient_email}</div>
+          <h4 style="font-family:var(--font-header); font-size:1.05rem; font-weight:700; color:var(--text-primary);"><span class="mono-code">${timeStr}</span> ${appt.patient_name}</h4>
+          <div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted);">${appt.patient_email}</div>
         </div>
-        <span class="badge ${appt.status === 'confirmed' ? 'badge-low' : appt.status === 'completed' ? 'badge-low' : 'badge-high'}">${appt.status.toUpperCase()}</span>
+        <span class="urgency-badge ${appt.status === 'confirmed' ? 'urgency-low' : appt.status === 'completed' ? 'urgency-low' : 'urgency-high'}">${appt.status.toUpperCase()}</span>
       </div>
       
       ${appt.symptom_summary ? `
-        <div class="ai-box">
-          <div class="ai-box-head">
-            <span>Pre-Visit AI Triage Summary</span>
-            <span class="badge badge-${(appt.symptom_summary.ai_summary?.urgency || 'Medium').toLowerCase()}">${appt.symptom_summary.ai_summary?.urgency || 'Medium'} Urgency</span>
+        <div class="clinical-triage-card">
+          <div class="triage-card-header">
+            <span class="triage-title">PRE-VISIT AI CLINICAL TRIAGE</span>
+            <span class="urgency-badge urgency-${(appt.symptom_summary.ai_summary?.urgency || 'Medium').toLowerCase()}">${appt.symptom_summary.ai_summary?.urgency || 'Medium'} Urgency</span>
           </div>
-          <div style="font-size:0.85rem;"><strong>Symptoms:</strong> ${appt.symptom_summary.symptoms}</div>
-          <div style="font-size:0.85rem; margin-top:0.2rem;"><strong>Chief Complaint:</strong> ${appt.symptom_summary.ai_summary?.chief_complaint || 'N/A'}</div>
-          <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;"><strong>Suggested Questions for Doctor:</strong><br> ${ (appt.symptom_summary.ai_summary?.questions || []).map(q => `• ${q}`).join('<br>') }</div>
+          <div class="chief-complaint-text">${appt.symptom_summary.ai_summary?.chief_complaint || appt.symptom_summary.symptoms}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.2rem;">3 Suggested Questions for Doctor:</div>
+          <ol class="questions-list">
+            ${(appt.symptom_summary.ai_summary?.questions || []).map(q => `<li>${q}</li>`).join('')}
+          </ol>
         </div>
       ` : '<div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">No pre-visit symptoms submitted.</div>'}
 
       ${canSubmitNotes ? `
-        <hr class="card-divider">
-        <h5 style="font-size:0.875rem; font-weight:700; margin-bottom:0.5rem;">Submit Post-Visit Clinical Notes & Prescription</h5>
-        <div class="form-group">
-          <textarea id="notes_${appt.id}" rows="2" placeholder="Clinical diagnosis and notes..."></textarea>
+        <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border-color);">
+          <label class="clinical-label">Submit Post-Visit Clinical Notes & Prescription</label>
+          <div class="form-group">
+            <textarea id="notes_${appt.id}" rows="2" placeholder="Clinical diagnosis and notes..."></textarea>
+          </div>
+          <button class="btn btn-teal" onclick="submitPostVisitNotes('${appt.id}')">Submit Clinical Notes & Complete Visit</button>
         </div>
-        <button class="btn btn-primary" onclick="submitPostVisitNotes('${appt.id}')">Submit Clinical Notes (Triggers Post-Visit AI Summary)</button>
       ` : isCompleted ? `
-        <div class="ai-box" style="background:var(--success-bg); border-color:var(--success-border);">
-          <div class="ai-box-head" style="color:var(--success);">Generated Post-Visit Patient Summary</div>
+        <div class="clinical-triage-card" style="border-left-color:var(--status-green);">
+          <div class="triage-card-header">
+            <span class="triage-title" style="color:var(--status-green);">PATIENT-FRIENDLY POST-VISIT SUMMARY</span>
+          </div>
           <div style="font-size:0.85rem;">${appt.visit_note?.ai_patient_summary || 'N/A'}</div>
         </div>
       ` : isCancelled ? `
-        <div style="font-size:0.8rem; color:var(--danger); margin-top:0.5rem; font-weight:600;">
+        <div style="font-size:0.8rem; color:var(--status-coral); margin-top:0.5rem; font-weight:600;">
           Appointment Cancelled — No Visit Notes Permitted
         </div>
       ` : ''}
@@ -396,8 +416,6 @@ async function loadAdminDoctorsList() {
   doctors.forEach(doc => {
     select.innerHTML += `<option value="${doc.id}">${doc.name} (${doc.specialisation})</option>`;
   });
-
-  document.getElementById('statDoctorsCount').innerText = `${doctors.length} Doctors`;
 }
 
 async function handleScheduleLeave(e) {
@@ -433,19 +451,19 @@ async function loadFailedNotifications() {
   container.innerHTML = '';
 
   if (!data.failedNotifications || data.failedNotifications.length === 0) {
-    container.innerHTML = '<div style="color:var(--success); font-weight:600; font-size:0.85rem; padding:1rem 0;">All notifications delivered. Dead-letter queue is empty.</div>';
+    container.innerHTML = '<div style="color:var(--status-green); font-weight:600; font-size:0.85rem; padding:1rem 0;">All notifications delivered. Dead-letter queue is empty.</div>';
     return;
   }
 
   data.failedNotifications.forEach(notif => {
     const div = document.createElement('div');
-    div.className = 'feed-item-card flex-between';
+    div.className = 'clinical-feed-card flex-between';
     div.innerHTML = `
       <div>
-        <strong style="color:var(--danger);">${notif.type.toUpperCase()}</strong> (${notif.channel})<br>
-        <small style="color:var(--text-muted);">User: ${notif.user?.email || 'N/A'} | Retries: ${notif.retry_count}/3</small>
+        <strong style="color:var(--status-coral);">${notif.type.toUpperCase()}</strong> (${notif.channel})<br>
+        <small style="font-family:var(--font-mono); color:var(--text-muted);">User: ${notif.user?.email || 'N/A'} | Retries: ${notif.retry_count}/3</small>
       </div>
-      <button class="btn btn-outline" onclick="retryFailedNotification('${notif.id}')">Retry Delivery</button>
+      <button class="btn btn-outline btn-sm" onclick="retryFailedNotification('${notif.id}')">Retry Delivery</button>
     `;
     container.appendChild(div);
   });

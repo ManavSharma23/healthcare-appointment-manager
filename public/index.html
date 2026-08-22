@@ -3,295 +3,212 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PulseCare Clinical Portal | Enterprise Healthcare Platform</title>
+  <title>PulseCare Clinical Scheduling System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-  <!-- Enterprise System Bar -->
-  <div class="top-announcement">
-    <div class="container announcement-content">
-      <span>System Status: <strong>Operational</strong> | Concurrency Engine: Active | Google OAuth: Connected</span>
-      <span class="live-badge"><span class="pulse-dot"></span> System Online</span>
-    </div>
-  </div>
-
-  <!-- Main Navigation Header -->
-  <header class="navbar">
-    <div class="logo">
-      <div class="logo-symbol">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-      </div>
-      <div class="logo-brand">Pulse<span>Care</span> <span class="brand-tag">Enterprise</span></div>
-    </div>
-    
-    <nav class="nav-tabs">
-      <button class="nav-tab active" onclick="switchDashboard('patient')">
-        Patient Portal
-      </button>
-      <button class="nav-tab" onclick="switchDashboard('doctor')">
-        Doctor Workstation
-      </button>
-      <button class="nav-tab" onclick="switchDashboard('admin')">
-        Administration
-      </button>
-    </nav>
-    
-    <div class="user-profile-badge" id="userStatus">
-      <div class="user-avatar" id="userAvatar">P</div>
-      <div>
-        <div class="user-role-title" id="currentRole">Patient Account</div>
-        <div class="user-email-subtitle" id="currentEmail">patient@clinic.com</div>
-      </div>
-    </div>
-  </header>
-
-  <!-- Metrics Overview Banner -->
-  <div class="metrics-banner">
-    <div class="container grid-4">
-      <div class="metric-card">
-        <div class="metric-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-        <div>
-          <div class="metric-value" id="statDoctorsCount">2 Doctors</div>
-          <div class="metric-label">Active Specialists</div>
-        </div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        </div>
-        <div>
-          <div class="metric-value">100% Protected</div>
-          <div class="metric-label">Double-Booking Defense</div>
-        </div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        </div>
-        <div>
-          <div class="metric-value">Gemini 1.5 LLM</div>
-          <div class="metric-label">Clinical AI Triage</div>
-        </div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-        </div>
-        <div>
-          <div class="metric-value">OAuth 2.0</div>
-          <div class="metric-label">Google Calendar Sync</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Main Content Container -->
-  <main class="container main-content">
-    
-    <!-- PATIENT PORTAL -->
-    <section id="patientDashboard" class="dashboard-panel active">
-      <div class="panel-header">
-        <div>
-          <span class="section-badge">Patient Portal</span>
-          <h2>Appointments & AI Pre-Visit Triage</h2>
-          <p>Select a specialist, hold available slots with 5-minute concurrency protection, and submit symptom notes.</p>
-        </div>
-        <button class="btn btn-outline" onclick="loadDoctors()">Refresh Directory</button>
+  <div class="app-layout">
+    <!-- Left-Rail Clinical Sidebar (Epic/Cerner Style) -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-title">PULSE<span>CARE</span></div>
+        <div class="system-subtitle">Clinical Scheduling System</div>
       </div>
 
-      <div class="grid-layout-2">
-        <!-- Doctor Search & Slot Selection -->
-        <div class="content-card">
-          <div class="card-head">
-            <div class="step-circle">1</div>
-            <div>
-              <h3>Select Doctor & Reserve Time Slot</h3>
-              <p class="card-sub">Real-time slot reservation backed by transactional DB locks</p>
-            </div>
-          </div>
-          
-          <div class="search-bar-wrap">
-            <input type="text" id="patientSpecFilter" placeholder="Search by specialization (Cardiology, Dermatology...)" oninput="loadDoctors()">
-          </div>
-          
-          <div id="doctorList" class="doctor-cards-stack"></div>
+      <div class="system-status-line">
+        <span class="status-indicator"></span>
+        <span class="status-text">System Nominal • Concurrency Lock Active</span>
+      </div>
 
-          <div id="slotPickerSection" class="slot-selection-panel hidden">
-            <div class="slot-panel-head">
-              <h4>Available Slots: <span id="selectedDoctorName" class="doctor-highlight">Dr. Sarah Jenkins</span></h4>
-              <div class="date-picker-box">
-                <label>Date: </label>
-                <input type="date" id="bookingDate" onchange="loadDoctorSlots()">
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Portals</div>
+        <button class="nav-item active" onclick="switchDashboard('patient')">
+          <span class="nav-icon">▪</span> Patient Scheduling
+        </button>
+        <button class="nav-item" onclick="switchDashboard('doctor')">
+          <span class="nav-icon">▪</span> Doctor Workstation
+        </button>
+        <button class="nav-item" onclick="switchDashboard('admin')">
+          <span class="nav-icon">▪</span> Administration
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="active-user-info">
+          <div class="user-role-label" id="currentRole">Patient Account</div>
+          <div class="user-email-text" id="currentEmail">patient@clinic.com</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Area -->
+    <div class="main-workspace">
+      <!-- Top Action Bar -->
+      <header class="top-workspace-header">
+        <div class="workspace-title-box">
+          <h1 id="workspaceTitle">Patient Scheduling & Intake</h1>
+          <div class="workspace-subtitle" id="workspaceSub">Select doctor, reserve ledger slots, and review AI clinical triages</div>
+        </div>
+        <div class="top-controls">
+          <button class="btn btn-outline btn-sm" onclick="refreshActivePortal()">Refresh Data</button>
+        </div>
+      </header>
+
+      <div class="workspace-body">
+        
+        <!-- PATIENT PORTAL -->
+        <section id="patientDashboard" class="dashboard-panel active">
+          <div class="grid-2col">
+            <!-- Doctor Directory & Slot Ledger -->
+            <div class="clinical-card">
+              <div class="card-title-row">
+                <h2>Doctor Directory & Slot Ledger</h2>
+                <div class="card-subtitle-text">Real-time availability ledger with 5-minute atomic holds</div>
+              </div>
+
+              <div class="filter-input-wrap">
+                <input type="text" id="patientSpecFilter" placeholder="Filter by specialization (e.g. Cardiology, Dermatology...)" oninput="loadDoctors()">
+              </div>
+
+              <div id="doctorList" class="doctor-ledger-list"></div>
+
+              <div id="slotPickerSection" class="slot-ledger-container hidden">
+                <div class="ledger-header">
+                  <h3>Schedule Ledger: <span id="selectedDoctorName" class="highlight-teal">Dr. Sarah Jenkins</span></h3>
+                  <div class="date-control">
+                    <label>Date: </label>
+                    <input type="date" id="bookingDate" onchange="loadDoctorSlots()">
+                  </div>
+                </div>
+
+                <div class="ledger-legend">
+                  <span class="legend-chip legend-available"><span class="edge-line"></span> Available</span>
+                  <span class="legend-chip legend-held"><span class="edge-line"></span> 5-Min Hold Active</span>
+                  <span class="legend-chip legend-booked"><span class="hatch-box"></span> Booked</span>
+                </div>
+
+                <div id="slotGrid" class="slot-ledger-grid"></div>
+                <div id="bookingMessage" class="status-notice"></div>
               </div>
             </div>
-            
-            <div class="slot-legend">
-              <span class="legend-item"><span class="dot dot-available"></span> Available</span>
-              <span class="legend-item"><span class="dot dot-held"></span> 5-Min Hold Active</span>
-              <span class="legend-item"><span class="dot dot-booked"></span> Reserved / Unavailable</span>
-            </div>
 
-            <div id="slotGrid" class="slots-grid"></div>
-            <div id="bookingMessage" class="status-msg"></div>
-          </div>
-        </div>
+            <!-- Pre-Visit Symptom Intake & Summary Feed -->
+            <div class="clinical-card">
+              <div class="card-title-row">
+                <h2>Symptom Intake & AI Clinical Summaries</h2>
+                <div class="card-subtitle-text">Pre-visit symptom triage processed via structured LLM schema</div>
+              </div>
 
-        <!-- Pre-Visit Symptom Submission & History -->
-        <div class="content-card">
-          <div class="card-head">
-            <div class="step-circle">2</div>
-            <div>
-              <h3>Symptom Intake & Clinical Summaries</h3>
-              <p class="card-sub">Pre-visit symptom intake processed via structured LLM prompt</p>
-            </div>
-          </div>
+              <div id="activeHoldSection" class="hold-ledger-banner hidden">
+                <div class="hold-header-row">
+                  <span class="hold-alert-title">5-MINUTE TRANSACTIONAL HOLD ACTIVE</span>
+                  <span class="mono-code" id="holdTimeCode">HOLD-TTL-5M</span>
+                </div>
+                <p class="hold-instruction">Slot locked against double-booking. Complete symptom details below to confirm appointment.</p>
 
-          <div id="activeHoldSection" class="hold-active-banner hidden">
-            <div class="hold-timer-head">
-              <span class="timer-badge">5-Minute Slot Hold Active</span>
-              <span class="hold-sub">Slot locked against double-booking. Complete symptoms to confirm.</span>
-            </div>
-            
-            <div class="form-group">
-              <label>Describe Clinical Symptoms</label>
-              <textarea id="symptomsInput" rows="3" placeholder="Describe symptoms, duration, and severity for pre-visit doctor triage..."></textarea>
-            </div>
-            <button class="btn btn-primary btn-full" onclick="submitSymptomsAndConfirm()">
-              Submit Symptoms & Confirm Booking
-            </button>
-          </div>
+                <div class="form-group">
+                  <label class="clinical-label">Clinical Symptoms Description</label>
+                  <textarea id="symptomsInput" rows="3" placeholder="Enter patient symptom details, onset duration, and severity for pre-visit clinical triage..."></textarea>
+                </div>
+                <button class="btn btn-teal btn-full" onclick="submitSymptomsAndConfirm()">
+                  Submit Symptoms & Confirm Reservation
+                </button>
+              </div>
 
-          <div class="history-title">
-            <h4>Active Appointments & Visit Summaries</h4>
-          </div>
-          <div id="patientAppointmentsList" class="feed-container"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- DOCTOR WORKSTATION -->
-    <section id="doctorDashboard" class="dashboard-panel">
-      <div class="panel-header">
-        <div>
-          <span class="section-badge">Doctor Workstation</span>
-          <h2>Clinical Schedule & Patient Records</h2>
-          <p>Review patient pre-visit AI symptom summaries and submit post-visit notes and prescriptions.</p>
-        </div>
-        <div class="date-select-group">
-          <label>Filter Date: </label>
-          <input type="date" id="doctorFilterDate" onchange="loadDoctorSchedule()">
-        </div>
-      </div>
-
-      <div class="content-card">
-        <div id="doctorAppointmentsList" class="feed-container"></div>
-      </div>
-    </section>
-
-    <!-- ADMIN CONSOLE -->
-    <section id="adminDashboard" class="dashboard-panel">
-      <div class="panel-header">
-        <div>
-          <span class="section-badge">Administration Console</span>
-          <h2>Doctor Profiles & System Operations</h2>
-          <p>Manage specialist accounts, schedule doctor leaves with conflict resolution, and monitor failed notifications.</p>
-        </div>
-      </div>
-
-      <div class="grid-layout-2">
-        <div class="content-card">
-          <div class="card-head">
-            <div class="step-circle">+</div>
-            <div>
-              <h3>Create Doctor Profile</h3>
-              <p class="card-sub">Register new doctor account</p>
+              <div class="section-divider-label">CONFIRMED APPOINTMENTS FEED</div>
+              <div id="patientAppointmentsList" class="clinical-feed"></div>
             </div>
           </div>
+        </section>
 
-          <form onsubmit="handleCreateDoctor(event)" class="form-grid">
-            <div class="form-group">
-              <label>Doctor Full Name</label>
-              <input type="text" id="adminDocName" required placeholder="Dr. Marcus Vance">
-            </div>
-            <div class="form-group">
-              <label>Email Address</label>
-              <input type="email" id="adminDocEmail" required placeholder="marcus@clinic.com">
-            </div>
-            <div class="form-group">
-              <label>Password</label>
-              <input type="password" id="adminDocPass" required placeholder="••••••••">
-            </div>
-            <div class="form-group">
-              <label>Specialization</label>
-              <input type="text" id="adminDocSpec" required placeholder="Neurology">
-            </div>
-            <button type="submit" class="btn btn-primary btn-full">Create Doctor Account</button>
-          </form>
-
-          <hr class="card-divider">
-
-          <div class="card-head">
-            <div class="step-circle">L</div>
-            <div>
-              <h3>Schedule Doctor Leave</h3>
-              <p class="card-sub">Cancels conflicting slots & dispatches patient notifications</p>
-            </div>
-          </div>
-
-          <form onsubmit="handleScheduleLeave(event)" class="form-grid">
-            <div class="form-group">
-              <label>Select Doctor</label>
-              <select id="adminLeaveDocSelect" required></select>
-            </div>
-            <div class="form-group">
-              <label>Leave Date</label>
-              <input type="date" id="adminLeaveDate" required>
-            </div>
-            <div class="form-group">
-              <label>Reason</label>
-              <input type="text" id="adminLeaveReason" placeholder="Medical Conference / Annual Leave">
-            </div>
-            <button type="submit" class="btn btn-warning btn-full">Schedule Leave & Resolve Conflicts</button>
-          </form>
-        </div>
-
-        <!-- Dead Letter Log -->
-        <div class="content-card">
-          <div class="card-head flex-between">
-            <div class="flex-row">
-              <div class="step-circle">N</div>
+        <!-- DOCTOR WORKSTATION -->
+        <section id="doctorDashboard" class="dashboard-panel">
+          <div class="clinical-card">
+            <div class="card-title-row flex-between">
               <div>
-                <h3>Failed Notifications Log</h3>
-                <p class="card-sub">Dead-letter queue retry monitoring</p>
+                <h2>Daily Appointment Schedule</h2>
+                <div class="card-subtitle-text">Review pre-visit AI summaries and complete clinical visit notes</div>
+              </div>
+              <div class="date-control">
+                <label>Date Filter: </label>
+                <input type="date" id="doctorFilterDate" onchange="loadDoctorSchedule()">
               </div>
             </div>
-            <button class="btn btn-outline" onclick="loadFailedNotifications()">Refresh Log</button>
+
+            <div id="doctorAppointmentsList" class="clinical-feed"></div>
           </div>
+        </section>
 
-          <div id="failedNotificationsList" class="feed-container"></div>
-        </div>
-      </div>
-    </section>
+        <!-- ADMIN CONSOLE -->
+        <section id="adminDashboard" class="dashboard-panel">
+          <div class="grid-2col">
+            <div class="clinical-card">
+              <div class="card-title-row">
+                <h2>Doctor Account Management</h2>
+                <div class="card-subtitle-text">Create doctor profiles & schedule leaves with automated conflict handling</div>
+              </div>
 
-  </main>
+              <form onsubmit="handleCreateDoctor(event)" class="form-stack">
+                <div class="form-group">
+                  <label class="clinical-label">Doctor Name</label>
+                  <input type="text" id="adminDocName" required placeholder="Dr. Marcus Vance">
+                </div>
+                <div class="form-group">
+                  <label class="clinical-label">Email Address</label>
+                  <input type="email" id="adminDocEmail" required placeholder="marcus@clinic.com">
+                </div>
+                <div class="form-group">
+                  <label class="clinical-label">Password</label>
+                  <input type="password" id="adminDocPass" required placeholder="••••••••">
+                </div>
+                <div class="form-group">
+                  <label class="clinical-label">Specialization</label>
+                  <input type="text" id="adminDocSpec" required placeholder="Neurology">
+                </div>
+                <button type="submit" class="btn btn-teal btn-full">Create Doctor Profile</button>
+              </form>
 
-  <!-- Professional Footer -->
-  <footer class="footer">
-    <div class="container footer-flex">
-      <div class="footer-brand">
-        <strong>PulseCare Platform</strong> • Clinical Healthcare Application
-      </div>
-      <div class="footer-links">
-        <span>Prisma ORM</span> • <span>PostgreSQL / SQLite</span> • <span>Gemini LLM API</span> • <span>Google Calendar Sync</span>
+              <div class="section-divider-label" style="margin-top:2rem;">SCHEDULE DOCTOR LEAVE</div>
+
+              <form onsubmit="handleScheduleLeave(event)" class="form-stack">
+                <div class="form-group">
+                  <label class="clinical-label">Select Doctor</label>
+                  <select id="adminLeaveDocSelect" required></select>
+                </div>
+                <div class="form-group">
+                  <label class="clinical-label">Leave Date</label>
+                  <input type="date" id="adminLeaveDate" required>
+                </div>
+                <div class="form-group">
+                  <label class="clinical-label">Reason</label>
+                  <input type="text" id="adminLeaveReason" placeholder="Medical Conference / Annual Leave">
+                </div>
+                <button type="submit" class="btn btn-warning btn-full">Schedule Leave & Cancel Conflicts</button>
+              </form>
+            </div>
+
+            <!-- Dead Letter Log -->
+            <div class="clinical-card">
+              <div class="card-title-row flex-between">
+                <div>
+                  <h2>Failed Notifications Log</h2>
+                  <div class="card-subtitle-text">Dead-letter queue retry monitoring</div>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="loadFailedNotifications()">Refresh Log</button>
+              </div>
+
+              <div id="failedNotificationsList" class="clinical-feed"></div>
+            </div>
+          </div>
+        </section>
+
       </div>
     </div>
-  </footer>
+  </div>
 
   <script src="app.js"></script>
 </body>
