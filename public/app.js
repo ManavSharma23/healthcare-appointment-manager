@@ -503,10 +503,14 @@ async function loadPatientAppointments() {
           <button class="btn btn-outline btn-sm" style="font-size:0.7rem;" onclick="printVisitSummary()">🖨 Print</button>
         </div>
         <div class="post-visit-body">${appt.visit_note.ai_patient_summary}</div>
-        ${appt.visit_note?.prescription && appt.visit_note.prescription !== '[]' ? `
+        ${appt.visit_note?.prescription && appt.visit_note.prescription.length > 0 ? `
           <div class="prescription-pill-row">
             <span class="prescription-label">💊 Prescription:</span>
-            ${(() => { try { return JSON.parse(appt.visit_note.prescription).map(p => `<span class="prescription-pill">${p}</span>`).join(''); } catch(e) { return `<span class="prescription-pill">${appt.visit_note.prescription}</span>`; } })()}
+            ${appt.visit_note.prescription.map(p => {
+              const label = typeof p === 'object' ? (p.medicine || p.name || JSON.stringify(p)) : String(p);
+              const freq  = typeof p === 'object' && p.frequency ? ` · ${p.frequency}` : '';
+              return `<span class="prescription-pill">${label}${freq}</span>`;
+            }).join('')}
           </div>
         ` : ''}
       </div>
