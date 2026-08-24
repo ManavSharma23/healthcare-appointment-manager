@@ -85,6 +85,46 @@ Open **`http://localhost:4000`** in your browser to launch the application.
 
 ---
 
+## 🗄️ Database Schema & Data Models
+
+- **`User`**: Base user entity storing authentication credentials, role (`patient` \| `doctor` \| `admin`), and relationships.
+- **`DoctorProfile`**: Extended doctor Metadata (clinical specialisation, working hours JSON, 30-min slot duration, active/deactivated state).
+- **`DoctorLeave`**: Scheduled leave dates (`YYYY-MM-DD`) with cancellation reason.
+- **`Appointment`**: Central booking ledger record (`held` \| `confirmed` \| `cancelled` \| `completed`) with 5-minute `expires_at` hold timestamp.
+- **`SymptomForm`**: Pre-visit symptom intake text and structured LLM triage JSON (`urgency`, `chief_complaint`, `questions`).
+- **`VisitNote`**: Post-visit clinical notes, JSON prescriptions, and patient-friendly AI summaries.
+- **`MedicationReminder`**: Scheduled medication intake frequency and background dispatch timestamps.
+- **`Notification`**: Email/SMS notification logs with retry counters (`pending` \| `sent` \| `failed` dead-letter queue).
+- **`CalendarEvent` / `CalendarToken`**: OAuth 2.0 Google Calendar event synchronization mapping.
+- **`AuditLog`**: System compliance audit trail with role, action, and timestamp indexing.
+
+---
+
+## 🤖 Verbatim LLM Prompts & Fallback Engine
+
+### 1. Pre-Visit Symptom Analysis Prompt
+> `"Analyse these symptoms and return: urgency level (Low / Medium / High), chief complaint, and three suggested questions for the doctor. Symptoms: <symptoms>"`
+
+### 2. Post-Visit Patient Summary Prompt
+> `"Convert these clinical notes into a patient-friendly summary with medication schedule and follow-up steps: <notes>"`
+
+*Note: In offline environments or API timeout events, the application automatically triggers symptom-specific fallback triage generators (Cardiac, Gastrointestinal, Neurological, Orthopedic, Dermatological).*
+
+---
+
+## 📅 Google Calendar OAuth 2.0 Setup Guide
+
+1. Navigate to the **[Google Cloud Console](https://console.cloud.google.com/)**.
+2. Create a new project named **PulseCare Appointment Manager**.
+3. Enable the **Google Calendar API** under **APIs & Services**.
+4. Go to **OAuth consent screen**, select **External**, and configure the app name and support email.
+5. Create credentials $\rightarrow$ **OAuth 2.0 Client IDs**:
+   - **Application Type**: Web Application
+   - **Authorized Redirect URI**: `http://localhost:4000/auth/google/callback`
+6. Copy the generated `Client ID` and `Client Secret` into your `.env` file under `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
+
+---
+
 ## 🧪 Running Concurrency & Integration Tests
 
 Run the 10-parallel-request slot hold concurrency test:
