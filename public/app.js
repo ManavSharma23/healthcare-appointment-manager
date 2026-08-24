@@ -58,6 +58,22 @@ async function init() {
   }
 }
 
+function showMainApp() {
+  const landing = document.getElementById('landingScreen');
+  const appLayout = document.querySelector('.app-layout');
+  if (landing) landing.classList.add('hidden');
+  if (appLayout) appLayout.classList.add('visible');
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const cta = document.getElementById('getStartedBtn');
+  if (cta) {
+    cta.addEventListener('click', () => {
+      showMainApp();
+    });
+  }
+});
+
 function refreshActivePortal() {
   switchDashboard(activeRole);
 }
