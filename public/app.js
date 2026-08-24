@@ -572,6 +572,38 @@ function showToast(message, type = 'info') {
 }
 
 // DOCTOR WORKSTATION
+async function switchDoctorWorkstationRoster(email) {
+  try {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: 'password123' })
+    });
+    const data = await res.json();
+    if (data.accessToken) {
+      tokens.doctor = data.accessToken;
+      
+      const docNames = {
+        'doctor@clinic.com': 'Dr. Sarah Jenkins',
+        'alex.rivera@clinic.com': 'Dr. Alex Rivera',
+        'info.agamarora@gmail.com': 'Dr. Agam Arora'
+      };
+      const name = docNames[email] || 'Doctor Workstation';
+      document.getElementById('currentUserName').innerText = name;
+      document.getElementById('currentEmail').innerText = email;
+      
+      const initials = name.replace('Dr.', '').trim().split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      const avatarEl = document.getElementById('userAvatarInitials');
+      if (avatarEl) avatarEl.innerText = initials;
+
+      showToast(`Switched workstation to ${name}`, 'info');
+      loadDoctorSchedule();
+    }
+  } catch (err) {
+    showToast('Failed to switch doctor workstation', 'error');
+  }
+}
+
 async function loadDoctorSchedule() {
   const container = document.getElementById('doctorAppointmentsList');
   // Skeleton loading shimmer

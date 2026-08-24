@@ -269,8 +269,18 @@
                   <h2>Clinical Schedule & Patient Triage</h2>
                   <div class="card-subtitle-text">Daily patient ledger with pre-visit AI triage checklists</div>
                 </div>
-                <div class="form-group" style="margin-bottom:0; width:160px;">
-                  <input type="date" id="doctorFilterDate" onchange="loadDoctorSchedule()">
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                  <!-- Quick Doctor Roster Switcher -->
+                  <div class="form-group" style="margin-bottom:0; width:170px;">
+                    <select id="docWorkstationSelect" onchange="switchDoctorWorkstationRoster(this.value)" style="font-size:0.75rem; padding:0.3rem 0.5rem;">
+                      <option value="doctor@clinic.com" selected>Dr. Sarah (Cardiology)</option>
+                      <option value="alex.rivera@clinic.com">Dr. Alex (Dermatology)</option>
+                      <option value="info.agamarora@gmail.com">Dr. Agam (Orthopedics)</option>
+                    </select>
+                  </div>
+                  <div class="form-group" style="margin-bottom:0; width:150px;">
+                    <input type="date" id="doctorFilterDate" onchange="loadDoctorSchedule()">
+                  </div>
                 </div>
               </div>
 
