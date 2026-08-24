@@ -145,21 +145,24 @@
             </div>
           </div>
 
-          <!-- Doctor Load Comparison (Tiny Horizontal Bars) -->
-          <div style="margin-top:0.75rem;">
-            <div style="font-size:0.65rem; color:#64748B; font-weight:700; margin-bottom:0.35rem;">DOCTOR SCHEDULE LOAD</div>
+          <!-- Doctor Load Comparison (With Max Capacity Scale Reference) -->
+          <div style="margin-top:0.85rem; padding-top:0.75rem; border-top:1px dashed rgba(255, 255, 255, 0.08);">
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.65rem; color:#64748B; font-weight:700; margin-bottom:0.35rem;">
+              <span>DOCTOR SCHEDULE LOAD</span>
+              <span style="font-family:var(--font-mono); font-size:0.6rem; color:var(--text-muted);">Max: 8 Slots</span>
+            </div>
             <div class="doc-load-list">
-              <div class="doc-load-row">
+              <div class="doc-load-row" title="Dr. Sarah: 2 of 8 slots filled">
                 <span class="doc-load-name">Dr. Sarah</span>
-                <div class="doc-load-track"><div class="doc-load-fill" style="width: 75%;"></div></div>
+                <div class="doc-load-track"><div class="doc-load-fill" style="width: 25%;"></div></div>
                 <span class="doc-load-count">2</span>
               </div>
-              <div class="doc-load-row">
+              <div class="doc-load-row" title="Dr. Alex: 1 of 8 slots filled">
                 <span class="doc-load-name">Dr. Alex</span>
-                <div class="doc-load-track"><div class="doc-load-fill" style="width: 35%;"></div></div>
+                <div class="doc-load-track"><div class="doc-load-fill" style="width: 12.5%;"></div></div>
                 <span class="doc-load-count">1</span>
               </div>
-              <div class="doc-load-row">
+              <div class="doc-load-row" title="Dr. Agam: 0 of 8 slots filled">
                 <span class="doc-load-name">Dr. Agam</span>
                 <div class="doc-load-track"><div class="doc-load-fill" style="width: 0%;"></div></div>
                 <span class="doc-load-count">0</span>
@@ -167,15 +170,24 @@
             </div>
           </div>
 
-          <!-- Weekly Heatmap Strip -->
-          <div style="margin-top:0.75rem;">
-            <div style="font-size:0.65rem; color:#64748B; font-weight:700; margin-bottom:0.35rem;">WEEKLY DENSITY HEATMAP</div>
+          <!-- Weekly Heatmap Strip (With Explicit Volume Legend & Current Day Accent) -->
+          <div style="margin-top:0.85rem; padding-top:0.75rem; border-top:1px dashed rgba(255, 255, 255, 0.08);">
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.65rem; color:#64748B; font-weight:700; margin-bottom:0.35rem;">
+              <span>WEEKLY DENSITY HEATMAP</span>
+              <div class="heatmap-legend" style="display:flex; align-items:center; gap:0.2rem; font-size:0.55rem; color:var(--text-muted);">
+                <span>Low</span>
+                <span style="width:6px; height:6px; background:rgba(15,118,110,0.25); border-radius:1px;"></span>
+                <span style="width:6px; height:6px; background:rgba(15,118,110,0.65); border-radius:1px;"></span>
+                <span style="width:6px; height:6px; background:var(--accent-teal); border-radius:1px;"></span>
+                <span>High</span>
+              </div>
+            </div>
             <div class="weekly-heatmap-strip">
-              <div class="heatmap-sq level-2" title="Mon: 3 Appts">Mon</div>
-              <div class="heatmap-sq level-3" title="Tue: 5 Appts">Tue</div>
-              <div class="heatmap-sq level-1" title="Wed: 1 Appt">Wed</div>
-              <div class="heatmap-sq level-4" title="Thu: 7 Appts">Thu</div>
-              <div class="heatmap-sq level-2" title="Fri: 4 Appts">Fri</div>
+              <div class="heatmap-sq level-2" title="Mon: 3 Appts (Medium Density)">Mon</div>
+              <div class="heatmap-sq level-3" title="Tue: 5 Appts (High Density)">Tue</div>
+              <div class="heatmap-sq level-1" title="Wed: 1 Appt (Low Density)">Wed</div>
+              <div class="heatmap-sq level-4 current-day" title="Thu: 7 Appts (Peak Density — TODAY)">Thu★</div>
+              <div class="heatmap-sq level-2" title="Fri: 4 Appts (Medium Density)">Fri</div>
               <div class="heatmap-sq level-0" title="Sat: Closed">Sat</div>
               <div class="heatmap-sq level-0" title="Sun: Closed">Sun</div>
             </div>

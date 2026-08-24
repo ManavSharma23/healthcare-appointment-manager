@@ -469,7 +469,12 @@ body {
 .heatmap-sq.level-1 { background: rgba(15, 118, 110, 0.25); color: #94A3B8; }
 .heatmap-sq.level-2 { background: rgba(15, 118, 110, 0.55); color: #FFFFFF; }
 .heatmap-sq.level-3 { background: rgba(15, 118, 110, 0.85); color: #FFFFFF; }
-.heatmap-sq.level-4 { background: var(--accent-teal); color: #FFFFFF; font-weight:700; box-shadow: 0 0 6px var(--accent-teal); }
+.heatmap-sq.level-4 { background: var(--accent-teal); color: #FFFFFF; font-weight:700; }
+
+.heatmap-sq.current-day {
+  border: 1px solid var(--accent-teal);
+  box-shadow: 0 0 6px rgba(27, 107, 107, 0.6);
+}
 
 .quick-stat-item .stat-num {
   font-family: var(--font-mono);
