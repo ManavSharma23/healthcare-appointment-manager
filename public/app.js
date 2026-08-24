@@ -50,6 +50,7 @@ async function init() {
     const dataA = await resA.json();
     if (dataA.accessToken) tokens.admin = dataA.accessToken;
 
+    await populateDoctorWorkstationDropdown();
     switchDashboard('patient');
     appendAuditLog('System initialized with demo credentials nominal.');
   } catch (err) {
@@ -621,14 +622,18 @@ async function populateDoctorWorkstationDropdown() {
   const select = document.getElementById('docWorkstationSelect');
   if (!select) return;
   try {
-    const res = await fetch(`${API_BASE}/patients/doctors`);
+    // Use admin endpoint to get ALL active doctors including newly created ones
+    const res = await fetch(`${API_BASE}/admin/doctors`, {
+      headers: { 'Authorization': `Bearer ${tokens.admin || tokens.doctor}` }
+    });
     const data = await res.json();
-    const doctors = data.doctors || [];
+    const doctors = (data.doctors || []).filter(d => d.is_active);
     if (doctors.length > 0) {
       const currentVal = select.value;
-      select.innerHTML = doctors.map(d => 
+      select.innerHTML = doctors.map(d =>
         `<option value="${d.email}">${d.name} (${d.specialisation})</option>`
       ).join('');
+      // Preserve current selection if still valid
       if (currentVal && doctors.some(d => d.email === currentVal)) {
         select.value = currentVal;
       }
