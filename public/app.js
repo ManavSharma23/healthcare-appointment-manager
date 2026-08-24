@@ -1201,4 +1201,8 @@ async function handleSaveSystemConfig(e) {
   }
 }
 
+function printVisitSummary() {
+  window.print();
+}
+
 window.onload = init;

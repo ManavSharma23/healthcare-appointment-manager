@@ -1087,3 +1087,34 @@ body.super-admin-mode .brand-title span {
   color: var(--status-coral);
   border: 1px solid var(--status-coral);
 }
+
+/* ─── PRINT / PDF EXPORT STYLES ─────────────────────────────────────────── */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .sidebar,
+  .top-navbar,
+  .super-admin-banner,
+  .btn,
+  #toastContainer,
+  .ledger-card,
+  .section-divider-label,
+  #slotPickerSection {
+    display: none !important;
+  }
+  .main-layout {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .content-area {
+    padding: 0 !important;
+  }
+  .clinical-card {
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+}
