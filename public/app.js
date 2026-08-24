@@ -195,6 +195,34 @@ async function loadInsightsAnalytics() {
     if (mMeta) mMeta.innerText = `${total > 0 ? Math.round((medUrgency/total)*100) : 0}% (${medUrgency} cases)`;
     if (lMeta) lMeta.innerText = `${total > 0 ? Math.round((lowUrgency/total)*100) : 0}% (${lowUrgency} cases)`;
 
+    // Calculate 7-day breakdown (Mon-Sun)
+    const dayCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 0: 0 }; // 0 is Sun
+    appts.forEach(a => {
+      const d = new Date(a.slot_start).getDay();
+      dayCounts[d] = (dayCounts[d] || 0) + 1;
+    });
+
+    const dayIds = { 1: ['valMon', 'barMon'], 2: ['valTue', 'barTue'], 3: ['valWed', 'barWed'], 4: ['valThu', 'barThu'], 5: ['valFri', 'barFri'], 6: ['valSat', 'barSat'], 0: ['valSun', 'barSun'] };
+    const maxVal = Math.max(1, ...Object.values(dayCounts));
+
+    Object.entries(dayIds).forEach(([dayNum, [valId, barId]]) => {
+      const cnt = dayCounts[dayNum] || 0;
+      const elVal = document.getElementById(valId);
+      const elBar = document.getElementById(barId);
+      if (elVal) elVal.innerText = cnt;
+      if (elBar) {
+        const pct = cnt === 0 ? 6 : Math.round((cnt / maxVal) * 100);
+        elBar.style.height = `${pct}%`;
+        elBar.style.minHeight = '6px';
+        if (cnt > 0) elBar.style.background = 'var(--accent-teal)';
+      }
+    });
+
+    const elTotalWeek = document.getElementById('analyticsTotalWeek');
+    const elDailyAvg  = document.getElementById('analyticsDailyAvg');
+    if (elTotalWeek) elTotalWeek.innerText = `${total} appointments`;
+    if (elDailyAvg)  elDailyAvg.innerText  = `${(total / 7).toFixed(1)}/day`;
+
     // Specialization Demand Breakdown
     const specMap = {};
     appts.forEach(a => {
