@@ -3,6 +3,7 @@ let activeRole = 'patient';
 let activeHoldId = null;
 let activeHoldSlotStart = null;
 let selectedDoctorId = null;
+let pendingLeaveData = null;
 
 const tokens = {
   patient: '',
@@ -49,6 +50,7 @@ async function init() {
     if (dataA.accessToken) tokens.admin = dataA.accessToken;
 
     switchDashboard('patient');
+    appendAuditLog('System initialized with demo credentials nominal.');
   } catch (err) {
     console.error('Initialization error:', err);
   }
@@ -59,6 +61,7 @@ function refreshActivePortal() {
 }
 
 function switchAccountRole(role) {
+  document.getElementById('roleSelector').value = role;
   switchDashboard(role);
 }
 
@@ -92,6 +95,16 @@ function switchDashboard(role) {
   }
 }
 
+function appendAuditLog(message) {
+  const container = document.getElementById('systemAuditLog');
+  if (!container) return;
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const div = document.createElement('div');
+  div.className = 'audit-item';
+  div.innerHTML = `<span class="mono-code">[${time}]</span> ${message}`;
+  container.prepend(div);
+}
+
 // PATIENT PORTAL
 async function loadDoctors() {
   const spec = document.getElementById('patientSpecFilter').value;
@@ -110,11 +123,11 @@ async function loadDoctors() {
     div.className = 'doctor-ledger-item';
     div.innerHTML = `
       <div>
-        <div class="doc-name">${doc.name} <span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">(${doc.email})</span></div>
+        <div class="doc-name">${doc.name}</div>
         <div class="doc-spec">${doc.specialisation}</div>
         <div class="doc-meta">Hours: ${doc.working_hours.start} - ${doc.working_hours.end} | ${doc.slot_duration_min} min slots</div>
       </div>
-      <button class="btn btn-teal btn-sm" onclick="selectDoctor('${doc.id}', '${doc.name} (${doc.email})')">View Time Slots</button>
+      <button class="btn btn-teal btn-sm" onclick="selectDoctor('${doc.id}', '${doc.name}')">View Time Slots</button>
     `;
     container.appendChild(div);
   });
@@ -245,6 +258,7 @@ async function submitSymptomsAndConfirm() {
 
   if (res.ok) {
     alert('Appointment Confirmed. Pre-visit AI summary generated & Google Calendar synchronized.');
+    appendAuditLog(`Patient Jane Doe confirmed appointment #${activeHoldId.substring(0, 8)}`);
     document.getElementById('activeHoldSection').classList.add('hidden');
     document.getElementById('symptomsInput').value = '';
     activeHoldId = null;
@@ -254,6 +268,10 @@ async function submitSymptomsAndConfirm() {
   } else {
     alert('Failed to confirm appointment.');
   }
+}
+
+function printVisitSummary() {
+  window.print();
 }
 
 async function loadPatientAppointments() {
@@ -294,7 +312,7 @@ async function loadPatientAppointments() {
             <span class="urgency-badge urgency-${(appt.symptom_summary.ai_summary?.urgency || 'Medium').toLowerCase()}">Urgency: ${appt.symptom_summary.ai_summary?.urgency || 'Medium'}</span>
           </div>
           <div class="chief-complaint-text">${appt.symptom_summary.ai_summary?.chief_complaint || appt.symptom_summary.symptoms}</div>
-          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.2rem;">AI-Generated Questions Your Doctor Will Review During Visit:</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.2rem;">Suggested Discussion Points for Visit:</div>
           <ol class="questions-list">
             ${(appt.symptom_summary.ai_summary?.questions || []).map(q => `<li>${q}</li>`).join('')}
           </ol>
@@ -305,6 +323,7 @@ async function loadPatientAppointments() {
         <div class="clinical-triage-card" style="border-left-color:var(--status-green);">
           <div class="triage-card-header">
             <span class="triage-title" style="color:var(--status-green);">PATIENT-FRIENDLY POST-VISIT SUMMARY</span>
+            <button class="btn btn-outline btn-sm" style="font-size:0.7rem; padding:0.2rem 0.5rem;" onclick="printVisitSummary()">Print Summary</button>
           </div>
           <div style="font-size:0.85rem; color:var(--text-body);">${appt.visit_note.ai_patient_summary}</div>
         </div>
@@ -378,7 +397,7 @@ async function loadDoctorSchedule() {
             <span class="urgency-badge urgency-${(appt.symptom_summary.ai_summary?.urgency || 'Medium').toLowerCase()}">${appt.symptom_summary.ai_summary?.urgency || 'Medium'} Urgency</span>
           </div>
           <div class="chief-complaint-text">${appt.symptom_summary.ai_summary?.chief_complaint || appt.symptom_summary.symptoms}</div>
-          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.2rem;">3 Questions for Doctor to Review During Visit:</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.2rem;">Clinical Intake Checklist:</div>
           <ol class="questions-list">
             ${(appt.symptom_summary.ai_summary?.questions || []).map(q => `<li>${q}</li>`).join('')}
           </ol>
@@ -431,6 +450,7 @@ async function submitPostVisitNotes(appointmentId) {
 
   if (res.ok) {
     alert('Clinical notes submitted. Post-visit AI summary generated & medication reminders scheduled.');
+    appendAuditLog(`Dr. Sarah Jenkins submitted visit notes for appointment #${appointmentId.substring(0, 8)}`);
     loadDoctorSchedule();
   } else {
     const errData = await res.json();
@@ -456,7 +476,9 @@ async function handleCreateDoctor(e) {
   });
 
   if (res.ok) {
+    const data = await res.json();
     alert('Doctor profile created successfully.');
+    appendAuditLog(`Created doctor account: ${data.doctor?.name || name} (${specialisation})`);
     loadAdminDoctorsList();
     loadDoctors();
   } else {
@@ -474,15 +496,38 @@ async function loadAdminDoctorsList() {
   select.innerHTML = '';
   const doctors = data.doctors || [];
   doctors.forEach(doc => {
-    select.innerHTML += `<option value="${doc.id}">${doc.name} (${doc.specialisation} - ${doc.email})</option>`;
+    select.innerHTML += `<option value="${doc.id}" data-name="${doc.name}">${doc.name} (${doc.specialisation} - ${doc.email})</option>`;
   });
 }
 
-async function handleScheduleLeave(e) {
+function triggerLeaveConfirmation(e) {
   e.preventDefault();
-  const docId = document.getElementById('adminLeaveDocSelect').value;
+  const select = document.getElementById('adminLeaveDocSelect');
+  const docId = select.value;
+  const docName = select.options[select.selectedIndex]?.getAttribute('data-name') || 'the selected doctor';
   const date = document.getElementById('adminLeaveDate').value;
   const reason = document.getElementById('adminLeaveReason').value;
+
+  if (!docId || !date) {
+    alert('Please select a doctor and leave date.');
+    return;
+  }
+
+  pendingLeaveData = { docId, docName, date, reason };
+  document.getElementById('modalLeaveBodyText').innerText = 
+    `Are you sure you want to schedule leave for ${docName} on ${date}? This action will immediately cancel conflicting active appointments and dispatch notification emails to affected patients.`;
+  document.getElementById('leaveModal').classList.remove('hidden');
+}
+
+function closeLeaveModal() {
+  pendingLeaveData = null;
+  document.getElementById('leaveModal').classList.add('hidden');
+}
+
+async function confirmScheduleLeaveAction() {
+  if (!pendingLeaveData) return;
+  const { docId, docName, date, reason } = pendingLeaveData;
+  closeLeaveModal();
 
   const res = await fetch(`${API_BASE}/admin/doctors/${docId}/leave`, {
     method: 'POST',
@@ -495,9 +540,13 @@ async function handleScheduleLeave(e) {
 
   if (res.ok) {
     const data = await res.json();
-    alert(`Doctor leave scheduled for ${date}. ${data.result?.cancelledAppointmentsCount || 0} conflicting appointments cancelled.`);
+    const cancelled = data.result?.cancelledAppointmentsCount || 0;
+    alert(`Doctor leave scheduled for ${date}. ${cancelled} conflicting appointments cancelled.`);
+    appendAuditLog(`Scheduled leave for ${docName} on ${date} (${cancelled} appointments cancelled)`);
     loadDoctorSchedule();
     loadPatientAppointments();
+  } else {
+    alert('Failed to schedule doctor leave.');
   }
 }
 
@@ -540,6 +589,7 @@ async function retryFailedNotification(id) {
     headers: { 'Authorization': `Bearer ${tokens.admin}` }
   });
   alert('Notification requeued for retry.');
+  appendAuditLog(`Requeued failed notification #${id.substring(0, 8)}`);
   loadFailedNotifications();
 }
 

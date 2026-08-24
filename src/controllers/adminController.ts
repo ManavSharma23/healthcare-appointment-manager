@@ -11,12 +11,20 @@ export async function createDoctor(req: Request, res: Response) {
     return res.status(400).json({ error: 'User with this email already exists' });
   }
 
+  // Format doctor name consistently with 'Dr.' prefix
+  let formattedName = name.trim();
+  if (!formattedName.startsWith('Dr.') && !formattedName.startsWith('Dr ')) {
+    formattedName = `Dr. ${formattedName}`;
+  } else if (formattedName.startsWith('Dr ')) {
+    formattedName = `Dr. ${formattedName.substring(3).trim()}`;
+  }
+
   const password_hash = await hashPassword(password);
 
   const doctorUser = await prisma.user.create({
     data: {
-      name,
-      email,
+      name: formattedName,
+      email: email.trim().toLowerCase(),
       password_hash,
       role: 'doctor',
       doctor_profile: {

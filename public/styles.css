@@ -43,15 +43,16 @@ body {
   min-height: 100vh;
 }
 
-/* Left-Rail Clinical Sidebar */
+/* Left-Rail Clinical Sidebar - Widened & No Overflow Clipping */
 .sidebar {
-  width: 250px;
+  width: 260px;
   background-color: var(--bg-sidebar);
   color: #FFFFFF;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   border-right: 1px solid var(--border-dark);
+  overflow-x: hidden;
 }
 
 .sidebar-header {
@@ -131,6 +132,7 @@ body {
   gap: 0.6rem;
   margin-bottom: 0.25rem;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .nav-item:hover {
@@ -172,23 +174,37 @@ body {
   color: var(--text-light);
 }
 
-/* DaySchedule-style Role Authentication Switcher Buttons */
-.btn-role-switch {
-  padding: 0.25rem 0.45rem;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
-  color: var(--text-light);
-  font-size: 0.68rem;
-  font-family: var(--font-mono);
-  cursor: pointer;
-  transition: all 0.15s ease;
+/* Demo Account Switcher Styling */
+.account-switch-wrap {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--border-dark);
 }
 
-.btn-role-switch:hover {
-  background: var(--accent-teal);
+.account-switch-label {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.35rem;
+}
+
+.demo-account-select {
+  width: 100%;
+  padding: 0.45rem 0.5rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-dark);
+  border-radius: 4px;
   color: #FFFFFF;
-  border-color: var(--accent-teal);
+  font-size: 0.75rem;
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+.demo-account-select option {
+  background: var(--bg-sidebar);
+  color: #FFFFFF;
 }
 
 /* Main Workspace */
@@ -679,4 +695,72 @@ textarea {
   text-align: center;
   color: var(--text-muted);
   font-size: 0.85rem;
+}
+
+/* System Audit Log Container */
+.audit-log-container {
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.85rem 1rem;
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.audit-item {
+  padding-bottom: 0.35rem;
+  border-bottom: 1px dashed var(--border-color);
+  color: var(--text-body);
+}
+
+.audit-item:last-child {
+  border-bottom: none;
+}
+
+/* Confirmation Modal Backdrop & Card */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header h3 {
+  font-family: var(--font-header);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--status-amber);
+  margin-bottom: 0.75rem;
+}
+
+.modal-body {
+  font-size: 0.875rem;
+  color: var(--text-body);
+  margin-bottom: 1.25rem;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
 }
