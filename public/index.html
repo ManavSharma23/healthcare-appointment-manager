@@ -468,214 +468,322 @@
 
         <!-- PROTECTED SUPER ADMIN / DEVELOPER WORKSTATION -->
         <section id="superAdminDashboard" class="dashboard-panel">
-
-          <!-- Real-Time System Engine Status Bar (4 KPI Tiles) -->
-          <div class="grid-4col" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:1rem; margin-bottom:1.5rem;">
-            <div class="clinical-card" style="padding:1rem; border-left:4px solid var(--status-green);">
-              <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Database State</div>
-              <div style="display:flex; align-items:center; justify-content:space-between; margin-top:0.4rem;">
-                <span style="font-family:var(--font-mono); font-size:1.3rem; font-weight:700; color:var(--status-green);">Connected</span>
-                <span class="sync-chip" style="font-size:0.65rem; padding:0.2rem 0.4rem;">SQLite / Prisma</span>
-              </div>
-              <div style="font-size:0.68rem; color:var(--text-muted); margin-top:0.3rem;">Active Pool: 3/10 connections</div>
-            </div>
-
-            <div class="clinical-card" style="padding:1rem; border-left:4px solid var(--accent-teal);">
-              <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Active Slot Holds</div>
-              <div style="display:flex; align-items:center; justify-content:space-between; margin-top:0.4rem;">
-                <span style="font-family:var(--font-mono); font-size:1.3rem; font-weight:700; color:var(--accent-teal);" id="superEngineActiveHolds">0 Holds</span>
-                <span style="font-size:0.65rem; font-family:var(--font-mono); color:var(--text-muted);">TTL: 5m</span>
-              </div>
-              <div style="font-size:0.68rem; color:var(--text-muted); margin-top:0.3rem;">Orphaned holds auto-purged</div>
-            </div>
-
-            <div class="clinical-card" style="padding:1rem; border-left:4px solid var(--status-amber);">
-              <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Worker Queue</div>
-              <div style="display:flex; align-items:center; justify-content:space-between; margin-top:0.4rem;">
-                <span style="font-family:var(--font-mono); font-size:1.3rem; font-weight:700; color:var(--status-amber);">0 Pending</span>
-                <span style="font-size:0.65rem; font-family:var(--font-mono); color:var(--status-green);">● Healthy</span>
-              </div>
-              <div style="font-size:0.68rem; color:var(--text-muted); margin-top:0.3rem;">Email & Dead-letter processor</div>
-            </div>
-
-            <div class="clinical-card" style="padding:1rem; border-left:4px solid #8b5cf6;">
-              <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">System Uptime</div>
-              <div style="display:flex; align-items:center; justify-content:space-between; margin-top:0.4rem;">
-                <span style="font-family:var(--font-mono); font-size:1.3rem; font-weight:700; color:#8b5cf6;">99.98%</span>
-                <span style="font-size:0.65rem; font-family:var(--font-mono); color:var(--text-muted);">v2.4.0</span>
-              </div>
-              <div style="font-size:0.68rem; color:var(--text-muted); margin-top:0.3rem;">Node.js / Express runtime</div>
-            </div>
+          <div class="superadmin-tab-bar" aria-label="Super admin sections">
+            <button class="superadmin-tab-btn active" data-superadmin-tab="overview">Overview</button>
+            <button class="superadmin-tab-btn" data-superadmin-tab="security">Security</button>
+            <button class="superadmin-tab-btn" data-superadmin-tab="infrastructure">Infrastructure</button>
           </div>
 
-          <div class="grid-2col">
-            <!-- Column 1: System Maintenance & Cleanup Tools -->
-            <div class="clinical-card amber-border">
-              <div class="card-title-row">
-                <h2>Database Maintenance & Hold Cleanup</h2>
-                <div class="card-subtitle-text">Purge abandoned slot holds and inspect system engine metrics</div>
+          <div id="superadminTabOverview" class="superadmin-tab-panel active">
+            <div class="grid-4col" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:1rem; margin-bottom:1.5rem;">
+              <div class="clinical-card" style="padding:1rem; border-left:4px solid var(--status-green);">
+                <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Database State</div>
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-top:0.4rem;">
+                  <span style="font-family:var(--font-mono); font-size:1.3rem; font-weight:700; color:var(--status-green);">Connected</span>
+                  <span class="sync-chip" style="font-size:0.65rem; padding:0.2rem 0.4rem;">SQLite / Prisma</span>
+                </div>
+                <div style="font-size:0.68rem; color:var(--text-muted); margin-top:0.3rem;">Active Pool: 3/10 connections</div>
               </div>
 
-              <div class="stat-row" style="background:var(--bg-card-secondary); padding:1rem; border-radius:6px; margin-bottom:1rem;">
-                <div>
-                  <div style="font-weight:600; color:var(--text-primary);">Atomic Slot Hold Cleanup</div>
-                  <div style="font-size:0.8rem; color:var(--text-muted);">Purge orphaned/expired slot holds (`expires_at < NOW`) with 0 patient investment</div>
+              <div class="clinical-card" style="padding:1rem; border-left:4px solid var(--accent-teal);">
+                <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Active Slot Holds</div>
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-top:0.4rem;">
+                  <span style="font-family:var(--font-mono); font-size:1.3rem; font-weight:700; color:var(--accent-teal);" id="superEngineActiveHolds">0 Holds</span>
+                  <span style="font-size:0.65rem; font-family:var(--font-mono); color:var(--text-muted);">TTL: 5m</span>
                 </div>
-                <button class="btn btn-warning" onclick="purgeExpiredHolds()">Run Hold Purge</button>
+                <div style="font-size:0.68rem; color:var(--text-muted); margin-top:0.3rem;">Orphaned holds auto-purged</div>
               </div>
 
-              <div id="purgeResultBox" class="alert-box alert-success hidden" style="margin-bottom:1.5rem;"></div>
-
-              <div class="section-divider-label">SYSTEM CONFIGURATION SETTINGS</div>
-              <form onsubmit="handleSaveSystemConfig(event)" class="form-stack">
-                <div class="grid-2col" style="gap:0.75rem;">
-                  <div class="form-group">
-                    <label class="clinical-label">Hold TTL (Minutes)</label>
-                    <input type="number" id="superHoldTtl" value="5" min="1" max="60">
-                  </div>
-                  <div class="form-group">
-                    <label class="clinical-label">Default Slot Duration (Min)</label>
-                    <input type="number" id="superSlotDuration" value="30" min="15" max="120">
-                  </div>
+              <div class="clinical-card" style="padding:1rem; border-left:4px solid var(--status-amber);">
+                <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Worker Queue</div>
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-top:0.4rem;">
+                  <span style="font-family:var(--font-mono); font-size:1.3rem; font-weight:700; color:var(--status-amber);">0 Pending</span>
+                  <span style="font-size:0.65rem; font-family:var(--font-mono); color:var(--status-green);">● Healthy</span>
                 </div>
-                <div class="form-group">
-                  <label class="clinical-label">Max Notification Retries</label>
-                  <input type="number" id="superMaxRetries" value="3" min="1" max="10">
-                </div>
-                <button type="submit" class="btn btn-teal btn-full">Save System Configuration</button>
-              </form>
-
-              <!-- Restricted Doctor Management & Deactivation Roster -->
-              <div class="section-divider-label" style="margin-top:2rem;">RESTRICTED DOCTOR DEACTIVATION & ROSTER</div>
-              <div class="card-title-row flex-between" style="margin-bottom:0.5rem;">
-                <div>
-                  <h3 style="font-size:1rem; color:var(--text-primary);">Doctor Life-Cycle & Purge Management</h3>
-                  <div class="card-subtitle-text">Soft-delete (deactivate) or permanently purge doctors with 0 history</div>
-                </div>
-                <button class="btn btn-outline btn-sm" onclick="loadAdminDoctorsList()">Refresh Roster</button>
+                <div style="font-size:0.68rem; color:var(--text-muted); margin-top:0.3rem;">Email & Dead-letter processor</div>
               </div>
 
-              <!-- Active Doctors List -->
-              <div class="section-divider-label">ACTIVE DOCTORS DIRECTORY</div>
-              <div id="adminActiveDoctorsList" class="clinical-feed"></div>
-
-              <!-- Inactive / Deactivated Doctors List -->
-              <div class="section-divider-label" style="margin-top:1.5rem;">INACTIVE / DEACTIVATED DOCTORS</div>
-              <div id="adminInactiveDoctorsList" class="clinical-feed"></div>
+              <div class="clinical-card" style="padding:1rem; border-left:4px solid #8b5cf6;">
+                <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">System Uptime</div>
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-top:0.4rem;">
+                  <span style="font-family:var(--font-mono); font-size:1.3rem; font-weight:700; color:#8b5cf6;">99.98%</span>
+                  <span style="font-size:0.65rem; font-family:var(--font-mono); color:var(--text-muted);">v2.4.0</span>
+                </div>
+                <div style="font-size:0.68rem; color:var(--text-muted); margin-top:0.3rem;">Node.js / Express runtime</div>
+              </div>
             </div>
 
-            <!-- Column 2: Full System-Wide Audit Log Viewer -->
-            <div class="clinical-card amber-border">
-              <div class="card-title-row flex-between">
-                <div>
-                  <h2>System Audit Log Viewer</h2>
-                  <div class="card-subtitle-text">Filterable, searchable compliance audit trail with CSV export</div>
+            <div class="grid-2col">
+              <div class="clinical-card amber-border">
+                <div class="card-title-row">
+                  <h2>Database Maintenance & Hold Cleanup</h2>
+                  <div class="card-subtitle-text">Purge abandoned slot holds and inspect system engine metrics</div>
                 </div>
-                <div style="display:flex; gap:0.4rem;">
-                  <button class="btn btn-teal btn-sm" onclick="exportAuditLogsCSV()">Export CSV</button>
-                  <button class="btn btn-outline btn-sm" onclick="loadSuperAdminAuditLogs()">Refresh Logs</button>
+
+                <div class="stat-row" style="background:var(--bg-card-secondary); padding:1rem; border-radius:6px; margin-bottom:1rem;">
+                  <div>
+                    <div style="font-weight:600; color:var(--text-primary);">Atomic Slot Hold Cleanup</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted);">Purge orphaned/expired slot holds (`expires_at < NOW`) with zero patient impact</div>
+                  </div>
+                  <button class="btn btn-warning" onclick="purgeExpiredHolds()">Run Hold Purge</button>
                 </div>
+
+                <div id="purgeResultBox" class="alert-box alert-success hidden" style="margin-bottom:1.5rem;"></div>
+
+                <div class="section-divider-label">SYSTEM CONFIGURATION SETTINGS</div>
+                <form onsubmit="handleSaveSystemConfig(event)" class="form-stack">
+                  <div class="grid-2col" style="gap:0.75rem;">
+                    <div class="form-group">
+                      <label class="clinical-label">Hold TTL (Minutes)</label>
+                      <input type="number" id="superHoldTtl" value="5" min="1" max="60">
+                    </div>
+                    <div class="form-group">
+                      <label class="clinical-label">Default Slot Duration (Min)</label>
+                      <input type="number" id="superSlotDuration" value="30" min="15" max="120">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="clinical-label">Max Notification Retries</label>
+                    <input type="number" id="superMaxRetries" value="3" min="1" max="10">
+                  </div>
+                  <button type="submit" class="btn btn-teal btn-full">Save System Configuration</button>
+                </form>
+
+                <div class="section-divider-label" style="margin-top:2rem;">RESTRICTED DOCTOR DEACTIVATION & ROSTER</div>
+                <div class="card-title-row flex-between" style="margin-bottom:0.5rem;">
+                  <div>
+                    <h3 style="font-size:1rem; color:var(--text-primary);">Doctor Life-Cycle & Purge Management</h3>
+                    <div class="card-subtitle-text">Soft-delete (deactivate) or permanently purge doctors with 0 history</div>
+                  </div>
+                  <button class="btn btn-outline btn-sm" onclick="loadAdminDoctorsList()">Refresh Roster</button>
+                </div>
+
+                <div class="section-divider-label">ACTIVE DOCTORS DIRECTORY</div>
+                <div id="adminActiveDoctorsList" class="clinical-feed"></div>
+                <div class="section-divider-label" style="margin-top:1.5rem;">INACTIVE / DEACTIVATED DOCTORS</div>
+                <div id="adminInactiveDoctorsList" class="clinical-feed"></div>
               </div>
 
-              <!-- Advanced Audit Log Filters -->
-              <div class="filter-input-wrap" style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1rem;">
-                <div style="display:flex; gap:0.5rem;">
-                  <input type="text" id="auditSearchQuery" placeholder="Filter by action, user or details..." style="flex:1;" oninput="loadSuperAdminAuditLogs(1)">
-                  <select id="auditRoleFilter" style="width:120px;" onchange="loadSuperAdminAuditLogs(1)">
-                    <option value="">All Roles</option>
-                    <option value="admin">Admin</option>
-                    <option value="superadmin">Super Admin</option>
-                    <option value="doctor">Doctor</option>
-                    <option value="patient">Patient</option>
-                  </select>
-                  <select id="auditSortOrder" style="width:120px;" onchange="loadSuperAdminAuditLogs(1)">
-                    <option value="desc">Newest First</option>
-                    <option value="asc">Oldest First</option>
-                  </select>
+              <div class="clinical-card amber-border">
+                <div class="card-title-row flex-between">
+                  <div>
+                    <h2>Operational Overview</h2>
+                    <div class="card-subtitle-text">System health, trend scores, and real-time operating posture</div>
+                  </div>
+                  <span class="sync-chip">Live</span>
                 </div>
-                <div style="display:flex; gap:0.5rem; align-items:center; font-size:0.8rem; color:var(--text-muted);">
-                  <label>From:</label>
-                  <input type="date" id="auditStartDate" onchange="loadSuperAdminAuditLogs(1)" style="flex:1; font-size:0.8rem; padding:0.3rem 0.5rem;">
-                  <label>To:</label>
-                  <input type="date" id="auditEndDate" onchange="loadSuperAdminAuditLogs(1)" style="flex:1; font-size:0.8rem; padding:0.3rem 0.5rem;">
-                  <button class="btn btn-outline btn-sm" style="font-size:0.7rem; padding:0.25rem 0.45rem;" onclick="clearAuditDateFilters()">Clear Dates</button>
-                </div>
-              </div>
 
-              <div id="superAuditLogContainer" class="audit-log-container" style="max-height:360px; overflow-y:auto;">
-                <div class="audit-item"><span class="mono-code">[System]</span> Audit log stream ready.</div>
-              </div>
-
-              <!-- Pagination Toolbar -->
-              <div class="flex-between" style="margin-top:0.75rem; padding-top:0.75rem; border-top:1px solid var(--border-color); font-size:0.8rem;">
-                <span id="auditPaginationInfo" style="color:var(--text-muted);">Page 1 of 1 (0 total entries)</span>
-                <div style="display:flex; gap:0.4rem;">
-                  <button id="auditPrevBtn" class="btn btn-outline btn-sm" onclick="changeAuditPage(-1)" disabled>◄ Prev</button>
-                  <button id="auditNextBtn" class="btn btn-outline btn-sm" onclick="changeAuditPage(1)" disabled>Next ►</button>
+                <div class="superadmin-metric-list">
+                  <div class="superadmin-metric-card success">
+                    <span class="superadmin-metric-title">DB integrity</span>
+                    <strong id="db-integrity-status">Loading…</strong>
+                    <small id="db-integrity-detail">Checking system state…</small>
+                  </div>
+                  <div class="superadmin-metric-card warn">
+                    <span class="superadmin-metric-title">Potential backlog</span>
+                    <strong id="backlog-count">Loading…</strong>
+                    <small id="backlog-detail">Checking workflow queue…</small>
+                  </div>
+                  <div class="superadmin-metric-card info">
+                    <span class="superadmin-metric-title">Hold resolution</span>
+                    <strong id="hold-resolution-value">Loading…</strong>
+                    <small id="hold-resolution-detail">Checking expiry cleanup…</small>
+                  </div>
                 </div>
+
+                <div class="card-subtitle-text" style="margin-top:0.6rem; margin-bottom:0.5rem;">Last 7 days appointment volume</div>
+                <div class="superadmin-mini-chart" id="overview-chart-bars"></div>
               </div>
             </div>
           </div>
 
-          <!-- Bottom Row: API & Webhook Health Monitor + Security Policy Log -->
-          <div class="grid-2col" style="margin-top:1.5rem;">
-            <!-- API & Webhook Health Monitor -->
-            <div class="clinical-card">
-              <div class="card-title-row flex-between">
-                <div>
-                  <h2>API Health & Webhook Endpoints</h2>
-                  <div class="card-subtitle-text">Integration endpoints, latency, and Google Calendar sync state</div>
+          <div id="superadminTabSecurity" class="superadmin-tab-panel">
+            <div class="grid-2col">
+              <div class="clinical-card amber-border">
+                <div class="card-title-row flex-between">
+                  <div>
+                    <h2>Security Event Stream</h2>
+                    <div class="card-subtitle-text">Failed authentications, privilege changes, and access anomalies</div>
+                  </div>
+                  <button class="btn btn-outline btn-sm" onclick="renderSecurityEvents()">Refresh</button>
                 </div>
-                <span class="sync-chip">Active Services</span>
+                <div id="securityEventFeed" class="security-event-feed"></div>
               </div>
-              <div style="display:flex; flex-direction:column; gap:0.6rem; margin-top:0.5rem;">
-                <div class="flex-between" style="padding:0.5rem 0.75rem; background:var(--bg-main); border-radius:6px; font-size:0.8rem;">
+
+              <div class="clinical-card amber-border">
+                <div class="card-title-row flex-between">
                   <div>
-                    <strong>Google Calendar Sync Webhook</strong>
-                    <div style="font-size:0.7rem; color:var(--text-muted);">https://api.pulsecare.internal/v1/sync/gcal</div>
+                    <h2>System Audit Log Viewer</h2>
+                    <div class="card-subtitle-text">Filterable, searchable compliance audit trail with CSV export</div>
                   </div>
-                  <span style="color:var(--status-green); font-family:var(--font-mono); font-weight:600; font-size:0.75rem;">● 200 OK (42ms)</span>
+                  <div style="display:flex; gap:0.4rem;">
+                    <button class="btn btn-teal btn-sm" onclick="exportAuditLogsCSV()">Export CSV</button>
+                    <button class="btn btn-outline btn-sm" onclick="loadSuperAdminAuditLogs()">Refresh Logs</button>
+                  </div>
                 </div>
-                <div class="flex-between" style="padding:0.5rem 0.75rem; background:var(--bg-main); border-radius:6px; font-size:0.8rem;">
-                  <div>
-                    <strong>Transactional Email Dispatcher (Resend/SendGrid)</strong>
-                    <div style="font-size:0.7rem; color:var(--text-muted);">SMTP / TLS Notification Queue</div>
+
+                <div class="filter-input-wrap" style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1rem;">
+                  <div style="display:flex; gap:0.5rem;">
+                    <input type="text" id="auditSearchQuery" placeholder="Filter by action, user or details..." style="flex:1;" oninput="loadSuperAdminAuditLogs(1)">
+                    <select id="auditRoleFilter" style="width:120px;" onchange="loadSuperAdminAuditLogs(1)">
+                      <option value="">All Roles</option>
+                      <option value="admin">Admin</option>
+                      <option value="superadmin">Super Admin</option>
+                      <option value="doctor">Doctor</option>
+                      <option value="patient">Patient</option>
+                    </select>
+                    <select id="auditSortOrder" style="width:120px;" onchange="loadSuperAdminAuditLogs(1)">
+                      <option value="desc">Newest First</option>
+                      <option value="asc">Oldest First</option>
+                    </select>
                   </div>
-                  <span style="color:var(--status-green); font-family:var(--font-mono); font-weight:600; font-size:0.75rem;">● Operational</span>
+                  <div style="display:flex; gap:0.5rem; align-items:center; font-size:0.8rem; color:var(--text-muted);">
+                    <label>From:</label>
+                    <input type="date" id="auditStartDate" onchange="loadSuperAdminAuditLogs(1)" style="flex:1; font-size:0.8rem; padding:0.3rem 0.5rem;">
+                    <label>To:</label>
+                    <input type="date" id="auditEndDate" onchange="loadSuperAdminAuditLogs(1)" style="flex:1; font-size:0.8rem; padding:0.3rem 0.5rem;">
+                    <button class="btn btn-outline btn-sm" style="font-size:0.7rem; padding:0.25rem 0.45rem;" onclick="clearAuditDateFilters()">Clear Dates</button>
+                  </div>
                 </div>
-                <div class="flex-between" style="padding:0.5rem 0.75rem; background:var(--bg-main); border-radius:6px; font-size:0.8rem;">
-                  <div>
-                    <strong>LLM Clinical Triage Engine</strong>
-                    <div style="font-size:0.7rem; color:var(--text-muted);">Offline Symptom Fallback + Gemini Pipeline</div>
+
+                <div id="superAuditLogContainer" class="audit-log-container" style="max-height:360px; overflow-y:auto;">
+                  <div class="audit-item"><span class="mono-code">[System]</span> Audit log stream ready.</div>
+                </div>
+
+                <div class="flex-between" style="margin-top:0.75rem; padding-top:0.75rem; border-top:1px solid var(--border-color); font-size:0.8rem;">
+                  <span id="auditPaginationInfo" style="color:var(--text-muted);">Page 1 of 1 (0 total entries)</span>
+                  <div style="display:flex; gap:0.4rem;">
+                    <button id="auditPrevBtn" class="btn btn-outline btn-sm" onclick="changeAuditPage(-1)" disabled>◄ Prev</button>
+                    <button id="auditNextBtn" class="btn btn-outline btn-sm" onclick="changeAuditPage(1)" disabled>Next ►</button>
                   </div>
-                  <span style="color:var(--accent-teal); font-family:var(--font-mono); font-weight:600; font-size:0.75rem;">● Online (Offline Ready)</span>
                 </div>
               </div>
             </div>
 
-            <!-- Security Audit & Access Control Policy Log -->
-            <div class="clinical-card">
-              <div class="card-title-row">
-                <h2>Security Policy & Session Integrity</h2>
-                <div class="card-subtitle-text">Active session tokens, security locks, and role policy rules</div>
+            <div class="grid-2col" style="margin-top:1.5rem;">
+              <div class="clinical-card">
+                <div class="card-title-row">
+                  <h2>Security Policy & Session Integrity</h2>
+                  <div class="card-subtitle-text">Active session tokens, security locks, and role policy rules</div>
+                </div>
+                <div class="stats-grid" style="margin-top:0.5rem;">
+                  <div class="stat-row">
+                    <span class="stat-label">Super Admin Key Authorization</span>
+                    <span class="stat-mono" style="color:var(--status-green);">Enforced (TTL 15m)</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-label">Atomic Hold Concurrency Lock</span>
+                    <span class="stat-mono" style="color:var(--accent-teal);">Active (`HOLD_TTL_MIN`)</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-label">Failed Login Lockout Policy</span>
+                    <span class="stat-mono">Max 5 Retries / 15m</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-label">Doctor Soft-Delete Protection</span>
+                    <span class="stat-mono" style="color:var(--status-amber);">Purge Blocked if Appts > 0</span>
+                  </div>
+                </div>
               </div>
-              <div class="stats-grid" style="margin-top:0.5rem;">
-                <div class="stat-row">
-                  <span class="stat-label">Super Admin Key Authorization</span>
-                  <span class="stat-mono" style="color:var(--status-green);">Enforced (TTL 15m)</span>
+
+              <div class="clinical-card">
+                <div class="card-title-row">
+                  <h2>Threat Summary</h2>
+                  <div class="card-subtitle-text">Signal quality and anomaly severity by category</div>
                 </div>
-                <div class="stat-row">
-                  <span class="stat-label">Atomic Hold Concurrency Lock</span>
-                  <span class="stat-mono" style="color:var(--accent-teal);">Active (`HOLD_TTL_MIN`)</span>
+                <div class="superadmin-threat-grid">
+                  <div class="threat-pill danger">24 failed logins</div>
+                  <div class="threat-pill warning">3 blocked IPs</div>
+                  <div class="threat-pill good">2 escalations reviewed</div>
+                  <div class="threat-pill neutral">0 open critical alerts</div>
                 </div>
-                <div class="stat-row">
-                  <span class="stat-label">Failed Login Lockout Policy</span>
-                  <span class="stat-mono">Max 5 Retries / 15m</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="superadminTabInfrastructure" class="superadmin-tab-panel">
+            <div class="grid-2col">
+              <div class="clinical-card">
+                <div class="card-title-row flex-between">
+                  <div>
+                    <h2>API Health & Webhook Endpoints</h2>
+                    <div class="card-subtitle-text">Integration endpoints, latency, and Google Calendar sync state</div>
+                  </div>
+                  <span class="sync-chip">Active Services</span>
                 </div>
-                <div class="stat-row">
-                  <span class="stat-label">Doctor Soft-Delete Protection</span>
-                  <span class="stat-mono" style="color:var(--status-amber);">Purge Blocked if Appts > 0</span>
+                <div style="display:flex; flex-direction:column; gap:0.6rem; margin-top:0.5rem;">
+                  <div class="flex-between" style="padding:0.5rem 0.75rem; background:var(--bg-main); border-radius:6px; font-size:0.8rem;">
+                    <div>
+                      <strong>Google Calendar Sync Webhook</strong>
+                      <div style="font-size:0.7rem; color:var(--text-muted);">https://api.pulsecare.internal/v1/sync/gcal</div>
+                    </div>
+                    <span style="color:var(--status-green); font-family:var(--font-mono); font-weight:600; font-size:0.75rem;">● 200 OK (42ms)</span>
+                  </div>
+                  <div class="flex-between" style="padding:0.5rem 0.75rem; background:var(--bg-main); border-radius:6px; font-size:0.8rem;">
+                    <div>
+                      <strong>Transactional Email Dispatcher (Resend/SendGrid)</strong>
+                      <div style="font-size:0.7rem; color:var(--text-muted);">SMTP / TLS Notification Queue</div>
+                    </div>
+                    <span style="color:var(--status-green); font-family:var(--font-mono); font-weight:600; font-size:0.75rem;">● Operational</span>
+                  </div>
+                  <div class="flex-between" style="padding:0.5rem 0.75rem; background:var(--bg-main); border-radius:6px; font-size:0.8rem;">
+                    <div>
+                      <strong>LLM Clinical Triage Engine</strong>
+                      <div style="font-size:0.7rem; color:var(--text-muted);">Offline Symptom Fallback + Gemini Pipeline</div>
+                    </div>
+                    <span style="color:var(--accent-teal); font-family:var(--font-mono); font-weight:600; font-size:0.75rem;">● Online (Offline Ready)</span>
+                  </div>
                 </div>
+              </div>
+
+              <div class="clinical-card">
+                <div class="card-title-row flex-between">
+                  <div>
+                    <h2>Runtime Health</h2>
+                    <div class="card-subtitle-text">Traffic, CPU, queue status, and runtime footprint</div>
+                  </div>
+                  <span class="sync-chip">Stable</span>
+                </div>
+                <div class="superadmin-health-grid">
+                  <div><span>Doctors</span><strong id="infra-doctor-count">Loading…</strong></div>
+                  <div><span>Active holds</span><strong id="infra-hold-count">Loading…</strong></div>
+                  <div><span>Pending alerts</span><strong id="infra-pending-alerts">Loading…</strong></div>
+                  <div><span>Uptime</span><strong id="infra-uptime">Loading…</strong></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid-2col" style="margin-top:1.5rem;">
+              <div class="clinical-card amber-border">
+                <div class="card-title-row">
+                  <h2>Configuration Controls</h2>
+                  <div class="card-subtitle-text">System tuning controls for the runtime and scheduling engine</div>
+                </div>
+                <form onsubmit="handleSaveSystemConfig(event)" class="form-stack">
+                  <div class="grid-2col" style="gap:0.75rem;">
+                    <div class="form-group">
+                      <label class="clinical-label">Hold TTL (Minutes)</label>
+                      <input type="number" id="superHoldTtlInfra" value="5" min="1" max="60">
+                    </div>
+                    <div class="form-group">
+                      <label class="clinical-label">Default Slot Duration (Min)</label>
+                      <input type="number" id="superSlotDurationInfra" value="30" min="15" max="120">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="clinical-label">Max Notification Retries</label>
+                    <input type="number" id="superMaxRetriesInfra" value="3" min="1" max="10">
+                  </div>
+                  <button type="submit" class="btn btn-teal btn-full">Save System Configuration</button>
+                </form>
+              </div>
+
+              <div class="clinical-card amber-border">
+                <div class="card-title-row">
+                  <h2>Doctor Lifecycle</h2>
+                  <div class="card-subtitle-text">Roster health and deactivation state across the practice</div>
+                </div>
+                <div id="adminActiveDoctorsListInfra" class="clinical-feed"></div>
               </div>
             </div>
           </div>

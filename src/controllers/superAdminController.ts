@@ -126,6 +126,98 @@ export async function getAuditLogs(req: Request, res: Response) {
   });
 }
 
+export async function getSystemOverview(req: Request, res: Response) {
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000);
+
+  const [
+    totalDoctors,
+    activeDoctors,
+    activeHolds,
+    expiredHolds,
+    pendingNotifications,
+    failedNotifications,
+    confirmedAppointments,
+    totalAppointments,
+    recentAppointments,
+  ] = await Promise.all([
+    prisma.user.count({ where: { role: 'doctor' } }),
+    prisma.user.count({ where: { role: 'doctor', doctor_profile: { is_active: true } } }),
+    prisma.appointment.count({ where: { status: 'held' } }),
+    prisma.appointment.count({ where: { status: 'held', expires_at: { lt: now } } }),
+    prisma.notification.count({ where: { status: 'pending' } }),
+    prisma.notification.count({ where: { status: 'failed' } }),
+    prisma.appointment.count({ where: { status: 'confirmed' } }),
+    prisma.appointment.count(),
+    prisma.appointment.findMany({
+      where: { slot_start: { gte: sevenDaysAgo } },
+      select: { slot_start: true },
+    }),
+  ]);
+
+  const chartValues = Array.from({ length: 7 }, (_, index) => {
+    const bucketStart = new Date(now);
+    bucketStart.setHours(0, 0, 0, 0);
+    bucketStart.setDate(bucketStart.getDate() - (6 - index));
+    const bucketEnd = new Date(bucketStart);
+    bucketEnd.setDate(bucketEnd.getDate() + 1);
+
+    return recentAppointments.filter((appt) => {
+      const slotTime = new Date(appt.slot_start);
+      return slotTime >= bucketStart && slotTime < bucketEnd;
+    }).length;
+  });
+
+  const backlogCount = pendingNotifications + failedNotifications;
+  const holdResolution = totalAppointments === 0 ? 100 : Math.min(100, Math.max(0, Math.round((confirmedAppointments / totalAppointments) * 100)));
+  const dbStatus = failedNotifications === 0 && pendingNotifications <= 1 ? 'Healthy' : 'Watch';
+  const dbDetail = `${totalDoctors} doctors • ${activeDoctors} active`;
+
+  return res.json({
+    dbStatus,
+    dbDetail,
+    activeHolds,
+    expiredHolds,
+    backlogCount,
+    holdResolution,
+    pendingNotifications,
+    failedNotifications,
+    uptimeSeconds: process.uptime(),
+    chartValues,
+    totalDoctors,
+    activeDoctors,
+    confirmedAppointments,
+    totalAppointments,
+  });
+}
+
+export async function getSecurityFeed(req: Request, res: Response) {
+  const logs = await prisma.auditLog.findMany({
+    orderBy: { created_at: 'desc' },
+    take: 6,
+  });
+
+  const events = logs.map((log) => {
+    const text = log.action.replace(/_/g, ' ').toLowerCase();
+    const time = new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    let type = 'info';
+    if (log.action.includes('FAILED') || log.action.includes('DELETE') || log.action.includes('PURGED')) type = 'danger';
+    else if (log.action.includes('CONFIG') || log.action.includes('LOCK') || log.action.includes('UNLOCK')) type = 'warning';
+    else if (log.action.includes('PURGED') || log.action.includes('RESOLVED')) type = 'success';
+
+    return {
+      type,
+      time,
+      title: text.charAt(0).toUpperCase() + text.slice(1),
+      detail: log.details || 'No detail captured',
+      actor: log.actor_name || log.actor_role,
+    };
+  });
+
+  return res.json({ events });
+}
+
 export async function getSystemConfig(req: Request, res: Response) {
   return res.json({ config: systemConfig });
 }

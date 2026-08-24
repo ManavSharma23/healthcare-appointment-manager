@@ -84,6 +84,15 @@ window.addEventListener('DOMContentLoaded', () => {
       populateAnalyticsDoctorSelect();
       loadInsightsAnalytics();
     }
+
+    const superTab = event.target.closest('[data-superadmin-tab]');
+    if (superTab) {
+      const tabName = superTab.dataset.superadminTab;
+      document.querySelectorAll('.superadmin-tab-btn').forEach(btn => btn.classList.toggle('active', btn === superTab));
+      document.querySelectorAll('.superadmin-tab-panel').forEach(panel => panel.classList.toggle('active', panel.id === `superadminTab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`));
+      if (tabName === 'overview') loadSystemOverview();
+      if (tabName === 'security') renderSecurityEvents();
+    }
   });
 
   const doctorSelect = document.getElementById('analyticsDoctorSelect');
@@ -93,6 +102,9 @@ window.addEventListener('DOMContentLoaded', () => {
       loadInsightsAnalytics();
     });
   }
+
+  renderSecurityEvents();
+  loadSystemOverview();
 });
 
 function refreshActivePortal() {
@@ -115,6 +127,12 @@ function switchDashboard(role) {
   const panel = document.getElementById(targetId);
   if (panel) {
     panel.classList.add('active');
+  }
+
+  if (role === 'superadmin') {
+    loadSystemOverview();
+    renderSecurityEvents();
+    loadSuperAdminAuditLogs(1);
   }
 
   // Highlight active nav item reliably
@@ -1848,6 +1866,107 @@ function clearAuditDateFilters() {
   document.getElementById('auditStartDate').value = '';
   document.getElementById('auditEndDate').value = '';
   loadSuperAdminAuditLogs(1);
+}
+
+async function renderSecurityEvents() {
+  const feed = document.getElementById('securityEventFeed');
+  if (!feed) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/superadmin/security-feed`, {
+      headers: { 'x-superadmin-key': 'superadmin123' }
+    });
+    const data = await res.json();
+    const events = data.events || [];
+
+    if (!events.length) {
+      feed.innerHTML = '<div class="empty-state-card"><div class="empty-state-icon">🛡️</div><div>No security activity recorded yet.</div></div>';
+      return;
+    }
+
+    feed.innerHTML = events.map(event => `
+      <div class="security-event-item ${event.type}">
+        <span class="security-event-time">${event.time}</span>
+        <div class="security-event-body">
+          <div class="security-event-title">${event.title}</div>
+          <div class="security-event-detail">${event.detail}</div>
+        </div>
+        <span class="security-event-actor">${event.actor}</span>
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error('Failed to load security feed', err);
+    feed.innerHTML = '<div class="empty-state-card"><div class="empty-state-icon">⚠️</div><div>Security events unavailable.</div></div>';
+  }
+}
+
+async function loadSystemOverview() {
+  try {
+    const res = await fetch(`${API_BASE}/superadmin/overview`, {
+      headers: { 'x-superadmin-key': 'superadmin123' }
+    });
+    const data = await res.json();
+
+    if (!data) return;
+
+    const activeHolds = data.activeHolds ?? 0;
+    const backlogCount = data.backlogCount ?? 0;
+    const holdResolution = data.holdResolution ?? 0;
+    const dbStatus = data.dbStatus ?? 'Healthy';
+    const dbDetail = data.dbDetail ?? 'system data';
+
+    const dbStatusEl = document.getElementById('db-integrity-status');
+    if (dbStatusEl) dbStatusEl.textContent = dbStatus;
+
+    const dbDetailEl = document.getElementById('db-integrity-detail');
+    if (dbDetailEl) dbDetailEl.textContent = dbDetail;
+
+    const backlogEl = document.getElementById('backlog-count');
+    if (backlogEl) backlogEl.textContent = `${backlogCount} ${backlogCount === 1 ? 'queue' : 'queues'}`;
+
+    const backlogDetailEl = document.getElementById('backlog-detail');
+    if (backlogDetailEl) backlogDetailEl.textContent = `${data.pendingNotifications ?? 0} pending • ${data.failedNotifications ?? 0} failed`;
+
+    const holdValueEl = document.getElementById('hold-resolution-value');
+    if (holdValueEl) holdValueEl.textContent = `${holdResolution}%`;
+
+    const holdDetailEl = document.getElementById('hold-resolution-detail');
+    if (holdDetailEl) holdDetailEl.textContent = `${activeHolds} active hold${activeHolds === 1 ? '' : 's'} • cleanup pending`;
+
+    const chart = document.getElementById('overview-chart-bars');
+    if (chart && Array.isArray(data.chartValues) && data.chartValues.length) {
+      const max = Math.max(...data.chartValues, 1);
+      chart.innerHTML = data.chartValues.map((value, index) => {
+        const height = value === 0 ? 8 : Math.max(18, (value / max) * 100);
+        return `<div class="chart-bar ${index === data.chartValues.length - 1 ? 'active' : ''}" style="height:${height}%" title="${value} appointments"></div>`;
+      }).join('');
+    } else if (chart) {
+      chart.innerHTML = '<div style="display:flex; align-items:center; justify-content:center; width:100%; color:var(--text-muted); font-size:0.8rem;">No appointment data available</div>';
+    }
+
+    const doctorCountEl = document.getElementById('infra-doctor-count');
+    if (doctorCountEl) doctorCountEl.textContent = `${data.totalDoctors ?? 0}`;
+
+    const infraHoldCountEl = document.getElementById('infra-hold-count');
+    if (infraHoldCountEl) infraHoldCountEl.textContent = `${activeHolds}`;
+
+    const pendingAlertsEl = document.getElementById('infra-pending-alerts');
+    if (pendingAlertsEl) pendingAlertsEl.textContent = `${backlogCount}`;
+
+    const uptimeEl = document.getElementById('infra-uptime');
+    if (uptimeEl) uptimeEl.textContent = formatUptime(data.uptimeSeconds ?? 0);
+
+    const superHolds = document.getElementById('superEngineActiveHolds');
+    if (superHolds) superHolds.textContent = `${activeHolds} Hold${activeHolds === 1 ? '' : 's'}`;
+  } catch (err) {
+    console.error('Failed to load system overview', err);
+  }
+}
+
+function formatUptime(seconds) {
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  return `${hrs}h ${mins}m`;
 }
 
 function exportAuditLogsCSV() {

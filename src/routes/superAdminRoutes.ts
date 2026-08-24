@@ -3,6 +3,8 @@ import {
   verifySuperAdminKey,
   purgeExpiredHolds,
   getAuditLogs,
+  getSystemOverview,
+  getSecurityFeed,
   getSystemConfig,
   updateSystemConfig,
 } from '../controllers/superAdminController';
@@ -18,6 +20,8 @@ router.use(verifySuperAdmin);
 
 router.post('/cleanup-expired-holds', purgeExpiredHolds);
 router.get('/audit-logs', getAuditLogs);
+router.get('/overview', getSystemOverview);
+router.get('/security-feed', getSecurityFeed);
 router.get('/system-config', getSystemConfig);
 router.patch('/system-config', updateSystemConfig);
 
