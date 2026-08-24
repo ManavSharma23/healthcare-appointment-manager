@@ -6,6 +6,7 @@ import adminRoutes from './routes/adminRoutes';
 import patientRoutes from './routes/patientRoutes';
 import doctorRoutes from './routes/doctorRoutes';
 import internalRoutes from './routes/internalRoutes';
+import superAdminRoutes from './routes/superAdminRoutes';
 
 dotenv.config();
 
@@ -21,9 +22,11 @@ app.use('/auth', authRoutes);
 app.use('/admin', adminRoutes);
 app.use('/patients', patientRoutes);
 app.use('/doctors', doctorRoutes);
+app.use('/superadmin', superAdminRoutes);
 
 // Global Error Handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('[UNHANDLED ERROR]:', err);
   res.status(500).json({ error: err.message || 'Internal Server Error' });
 });
+
