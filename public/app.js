@@ -131,6 +131,8 @@ function switchDashboard(role) {
     loadDoctors();
   } else if (role === 'patientAppts') {
     loadPatientAppointments();
+  } else if (role === 'medical') {
+    loadMedicalRecords();
   } else if (role === 'doctor') {
     populateDoctorWorkstationDropdown();
     loadDoctorSchedule();
@@ -159,6 +161,137 @@ function switchApptFeedTab(filter) {
 
   loadPatientAppointments();
 }
+
+let activeMedTab = 'completed';
+
+function switchMedTab(tab) {
+  activeMedTab = tab;
+  const btnCompleted = document.getElementById('tabMedCompleted');
+  const btnUpcoming  = document.getElementById('tabMedUpcoming');
+  if (btnCompleted) btnCompleted.className = tab === 'completed' ? 'btn btn-teal btn-sm' : 'btn btn-outline btn-sm';
+  if (btnUpcoming)  btnUpcoming.className  = tab === 'upcoming'  ? 'btn btn-teal btn-sm' : 'btn btn-outline btn-sm';
+  loadMedicalRecords();
+}
+
+async function loadMedicalRecords() {
+  const visitsFeed  = document.getElementById('medVisitsFeed');
+  const rxFeed      = document.getElementById('medPrescriptionsFeed');
+  const triageFeed  = document.getElementById('medTriageFeed');
+
+  try {
+    const res = await fetch(`${API_BASE}/patients/my-appointments`, {
+      headers: { 'Authorization': `Bearer ${tokens.patient}` }
+    });
+    const data = await res.json();
+    const appts = data.appointments || [];
+
+    const completedList = appts.filter(a => a.status === 'completed').sort((a, b) => new Date(b.slot_start) - new Date(a.slot_start));
+    const upcomingList  = appts.filter(a => a.status === 'confirmed' || a.status === 'held').sort((a, b) => new Date(a.slot_start) - new Date(b.slot_start));
+    const displayList   = activeMedTab === 'completed' ? completedList : upcomingList;
+
+    // ── Visit History Feed ──
+    if (visitsFeed) {
+      if (displayList.length === 0) {
+        visitsFeed.innerHTML = `
+          <div style="padding:1.5rem; text-align:center;">
+            <div style="font-size:1.4rem; margin-bottom:0.4rem;">${activeMedTab === 'completed' ? '✅' : '📋'}</div>
+            <div style="font-weight:600; color:var(--text-primary);">No ${activeMedTab === 'completed' ? 'completed visits' : 'upcoming appointments'} yet</div>
+            <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.25rem;">Book an appointment from the <strong>Book Appointment</strong> tab.</div>
+          </div>`;
+      } else {
+        visitsFeed.innerHTML = displayList.map(appt => {
+          const dateStr  = new Date(appt.slot_start).toLocaleDateString([], { dateStyle: 'medium' });
+          const timeStr  = new Date(appt.slot_start).toLocaleTimeString([], { timeStyle: 'short' });
+          const initials = appt.doctor_name.replace('Dr.','').trim().split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+          const rxList   = (appt.visit_note?.prescription || []).filter(p => {
+            const txt = (typeof p === 'object' ? (p.medicine||'') : String(p)).toLowerCase();
+            return txt && !txt.includes('none') && !txt.includes('no medicine');
+          });
+          const rxPills = rxList.map(p => {
+            const label = typeof p === 'object' ? (p.medicine||p.name) : String(p);
+            const freq  = typeof p === 'object' && p.frequency ? ` · ${p.frequency}` : '';
+            return `<span class="prescription-pill">${label}${freq}</span>`;
+          }).join('');
+          const summaryText = appt.visit_note?.ai_patient_summary
+            ? `<div style="font-size:0.8rem; color:var(--text-body); margin-top:0.5rem; padding-top:0.5rem; border-top:1px solid var(--border-color); line-height:1.5;">${appt.visit_note.ai_patient_summary}</div>`
+            : '';
+          const borderColor = activeMedTab === 'completed' ? 'var(--status-green)' : 'var(--accent-teal)';
+          const badge = activeMedTab === 'completed'
+            ? `<span class="urgency-badge status-badge-completed">COMPLETED</span>`
+            : `<span class="urgency-badge urgency-low">CONFIRMED</span>`;
+
+          return `
+            <div class="clinical-feed-card" style="border-left:4px solid ${borderColor}; margin-bottom:0.75rem;">
+              <div class="appt-card-header">
+                <div class="appt-card-doctor-info">
+                  <div class="appt-doctor-avatar">${initials}</div>
+                  <div>
+                    <div class="appt-doctor-name">${appt.doctor_name}</div>
+                    <div class="appt-specialisation">${appt.specialisation}</div>
+                  </div>
+                </div>
+                <div style="text-align:right;">
+                  ${badge}
+                  <div class="appt-datetime">📅 ${dateStr} · ${timeStr}</div>
+                </div>
+              </div>
+              ${summaryText}
+              ${rxPills ? `<div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-top:0.5rem;"><span style="font-size:0.72rem; color:var(--accent-teal); font-weight:600;">💊 Rx:</span>${rxPills}</div>` : ''}
+            </div>`;
+        }).join('');
+      }
+    }
+
+    // ── Active Prescriptions ──
+    if (rxFeed) {
+      const allRx = [];
+      completedList.forEach(appt => {
+        (appt.visit_note?.prescription || []).filter(p => {
+          const txt = (typeof p === 'object' ? (p.medicine||'') : String(p)).toLowerCase();
+          return txt && !txt.includes('none') && !txt.includes('no medicine');
+        }).forEach(p => allRx.push({ ...(typeof p === 'object' ? p : { medicine: String(p) }), doctor: appt.doctor_name, date: appt.slot_start }));
+      });
+      if (allRx.length === 0) {
+        rxFeed.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;">No prescriptions recorded yet. Complete a visit with your doctor.</div>`;
+      } else {
+        rxFeed.innerHTML = allRx.map(rx => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:0.55rem 0.75rem; background:var(--bg-main); border:1px solid var(--border-color); border-radius:6px; margin-bottom:0.5rem;">
+            <div>
+              <div style="font-weight:600; font-size:0.85rem; color:var(--text-primary);">💊 ${rx.medicine || rx.name}</div>
+              <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.1rem;">${rx.doctor} · ${new Date(rx.date).toLocaleDateString([], {dateStyle:'medium'})}</div>
+            </div>
+            <span style="font-size:0.72rem; color:var(--accent-teal); font-family:var(--font-mono);">${rx.frequency || rx.dosage || ''}</span>
+          </div>`).join('');
+      }
+    }
+
+    // ── Upcoming AI Triage ──
+    if (triageFeed) {
+      if (upcomingList.length === 0) {
+        triageFeed.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;">No upcoming appointments with AI triage data.</div>`;
+      } else {
+        triageFeed.innerHTML = upcomingList.map(appt => {
+          const urgency   = appt.symptom_summary?.ai_summary?.urgency || 'Pending';
+          const questions = appt.symptom_summary?.ai_summary?.questions || [];
+          const dateStr   = new Date(appt.slot_start).toLocaleDateString([], { dateStyle: 'medium' });
+          return `
+            <div class="clinical-feed-card" style="border-left:4px solid var(--status-amber); margin-bottom:0.75rem;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong style="font-size:0.85rem;">${appt.doctor_name} — ${appt.specialisation}</strong>
+                <span class="urgency-badge urgency-${urgency.toLowerCase()}">Urgency: ${urgency}</span>
+              </div>
+              <div style="font-size:0.72rem; color:var(--text-muted); margin:0.3rem 0;">📅 ${dateStr}</div>
+              ${questions.length > 0 ? `<ol style="font-size:0.78rem; color:var(--text-body); padding-left:1.2rem; margin-top:0.4rem;">${questions.map(q=>`<li>${q}</li>`).join('')}</ol>` : ''}
+            </div>`;
+        }).join('');
+      }
+    }
+
+  } catch(err) {
+    if (visitsFeed) visitsFeed.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem;">Unable to load medical records. Please refresh.</div>`;
+  }
+}
+
 
 async function loadInsightsAnalytics() {
   try {
