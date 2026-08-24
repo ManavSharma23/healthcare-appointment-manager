@@ -32,7 +32,95 @@
   --text-primary: #f8fafc;
   --text-body: #cbd5e1;
   --text-muted: #94a3b8;
-  --accent-teal-light: rgba(15, 118, 110, 0.2);
+  --accent-teal: #14b8a6;
+  --accent-teal-light: rgba(20, 184, 166, 0.2);
+  --status-amber-bg: rgba(217, 119, 6, 0.25);
+  --status-coral-bg: rgba(220, 38, 38, 0.25);
+  --status-green-bg: rgba(5, 150, 105, 0.25);
+}
+
+/* Dark Mode High-Contrast Overrides */
+[data-theme="dark"] .slot-ledger-btn {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+
+[data-theme="dark"] .slot-ledger-btn.available {
+  border-left-color: #14b8a6 !important;
+  background: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .slot-ledger-btn.available:hover {
+  background: rgba(20, 184, 166, 0.3) !important;
+  border-color: #14b8a6 !important;
+}
+
+[data-theme="dark"] .slot-ledger-btn.selected-slot-btn {
+  background: rgba(20, 184, 166, 0.35) !important;
+  border-color: #14b8a6 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 2px #14b8a6 !important;
+}
+
+[data-theme="dark"] .slot-ledger-btn.disabled {
+  background: #0f172a !important;
+  color: #64748b !important;
+  border-color: #1e293b !important;
+  border-left-color: #475569 !important;
+}
+
+[data-theme="dark"] .slot-ledger-btn.held {
+  background: rgba(217, 119, 6, 0.25) !important;
+  color: #fbbf24 !important;
+  border-left-color: #f59e0b !important;
+}
+
+[data-theme="dark"] .clinical-triage-card {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .triage-title {
+  color: #2dd4bf !important;
+}
+
+[data-theme="dark"] .triage-section-title {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .triage-checklist {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] input, 
+[data-theme="dark"] select, 
+[data-theme="dark"] textarea {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+
+[data-theme="dark"] .mono-code {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .doctor-ledger-item {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+[data-theme="dark"] .btn-outline {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+
+[data-theme="dark"] .btn-outline:hover {
+  background: #334155 !important;
 }
 
 .notif-popover-panel {
