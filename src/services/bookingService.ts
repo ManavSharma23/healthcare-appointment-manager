@@ -170,6 +170,40 @@ export async function cancelAppointment(
     data: { status: 'cancelled' },
   });
 
+  // Check waitlist for this doctor and date to dispatch cancellation backfill notification
+  try {
+    const slotDate = updated.slot_start.toISOString().split('T')[0];
+    const topWaitlist = await prisma.waitlistEntry.findFirst({
+      where: {
+        doctor_id: updated.doctor_id,
+        preferred_date: slotDate,
+        status: 'waiting',
+      },
+      orderBy: { created_at: 'asc' },
+    });
+
+    if (topWaitlist) {
+      await prisma.waitlistEntry.update({
+        where: { id: topWaitlist.id },
+        data: { status: 'notified' },
+      });
+      await prisma.notification.create({
+        data: {
+          user_id: topWaitlist.patient_id,
+          appointment_id: updated.id,
+          type: 'waitlist_slot_opened',
+          channel: 'email',
+          status: 'sent',
+          payload: JSON.stringify({
+            message: `A slot on ${slotDate} just opened up! Log in to claim it.`,
+          }),
+        },
+      });
+    }
+  } catch (wErr) {
+    console.error('Waitlist notification error:', wErr);
+  }
+
   appEventEmitter.emit('appointment.cancelled', {
     appointmentId: updated.id,
     patientId: updated.patient_id,

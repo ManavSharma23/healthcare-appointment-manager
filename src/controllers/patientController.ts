@@ -36,7 +36,7 @@ export async function getDoctors(req: AuthenticatedRequest, res: Response) {
 }
 
 export async function getDoctorSlots(req: AuthenticatedRequest, res: Response) {
-  const { id } = req.params; // doctor user_id
+  const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id; // doctor user_id
   const { date } = req.query; // YYYY-MM-DD
 
   if (!date || typeof date !== 'string') {
@@ -44,7 +44,7 @@ export async function getDoctorSlots(req: AuthenticatedRequest, res: Response) {
   }
 
   const doctorProfile = await prisma.doctorProfile.findUnique({
-    where: { user_id: id },
+    where: { user_id: idParam },
   });
 
   if (!doctorProfile) {
@@ -80,11 +80,12 @@ export async function getDoctorSlots(req: AuthenticatedRequest, res: Response) {
 
   const existingAppointments = await prisma.appointment.findMany({
     where: {
-      doctor_id: id,
+      doctor_id: idParam,
       status: { in: ['held', 'confirmed'] },
       slot_start: { gte: startOfDay, lte: endOfDay },
     },
   });
+
 
   const now = new Date();
 
@@ -131,10 +132,10 @@ export async function createHold(req: AuthenticatedRequest, res: Response) {
 
 export async function confirm(req: AuthenticatedRequest, res: Response) {
   const patientId = req.user!.userId;
-  const { id } = req.params;
+  const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
 
   try {
-    const appointment = await confirmAppointment(id, patientId);
+    const appointment = await confirmAppointment(idParam, patientId);
     return res.json({ message: 'Appointment confirmed successfully', appointment });
   } catch (err: any) {
     if (err instanceof SlotUnavailableError) {
@@ -146,11 +147,11 @@ export async function confirm(req: AuthenticatedRequest, res: Response) {
 
 export async function cancel(req: AuthenticatedRequest, res: Response) {
   const patientId = req.user!.userId;
-  const { id } = req.params;
+  const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const { reason } = req.body;
 
   try {
-    const appointment = await cancelAppointment(id, patientId, req.user!.role, reason);
+    const appointment = await cancelAppointment(idParam, patientId, req.user!.role, reason);
     return res.json({ message: 'Appointment cancelled', appointment });
   } catch (err: any) {
     return res.status(400).json({ error: err.message });
@@ -158,10 +159,10 @@ export async function cancel(req: AuthenticatedRequest, res: Response) {
 }
 
 export async function submitSymptoms(req: AuthenticatedRequest, res: Response) {
-  const { id } = req.params;
+  const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const { symptoms } = req.body;
 
-  const appointment = await prisma.appointment.findUnique({ where: { id } });
+  const appointment = await prisma.appointment.findUnique({ where: { id: idParam } });
   if (!appointment) {
     return res.status(404).json({ error: 'Appointment not found' });
   }
@@ -170,9 +171,9 @@ export async function submitSymptoms(req: AuthenticatedRequest, res: Response) {
   const { data: aiSummary, status: aiStatus } = await generatePreVisitSummary(symptoms);
 
   const symptomForm = await prisma.symptomForm.upsert({
-    where: { appointment_id: id },
+    where: { appointment_id: idParam },
     create: {
-      appointment_id: id,
+      appointment_id: idParam,
       symptoms_text: symptoms,
       ai_summary: JSON.stringify(aiSummary),
       ai_status: aiStatus,
@@ -196,10 +197,10 @@ export async function submitSymptoms(req: AuthenticatedRequest, res: Response) {
 }
 
 export async function getAppointmentSummary(req: AuthenticatedRequest, res: Response) {
-  const { id } = req.params;
+  const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
 
   const appointment = await prisma.appointment.findUnique({
-    where: { id },
+    where: { id: idParam },
     include: {
       doctor: { select: { name: true, email: true, doctor_profile: true } },
       symptom_form: true,
@@ -249,31 +250,66 @@ export async function getPatientAppointments(req: AuthenticatedRequest, res: Res
     orderBy: { slot_start: 'desc' },
   });
 
-  const formatted = appointments.map((a) => ({
+  const formatted = appointments.map(a => ({
     id: a.id,
     doctor_id: a.doctor_id,
-    doctor_name: a.doctor.name,
-    specialisation: a.doctor.doctor_profile?.specialisation || 'General Medicine',
+    doctor_name: a.doctor?.name || 'Doctor',
+    specialisation: a.doctor?.doctor_profile?.specialisation || 'General Medicine',
     slot_start: a.slot_start,
     slot_end: a.slot_end,
     status: a.status,
     expires_at: a.expires_at,
-    symptom_summary: a.symptom_form
-      ? {
-          symptoms: a.symptom_form.symptoms_text,
-          ai_summary: a.symptom_form.ai_summary ? JSON.parse(a.symptom_form.ai_summary) : null,
-          ai_status: a.symptom_form.ai_status,
-        }
-      : null,
-    visit_note: a.visit_note
-      ? {
-          doctor_notes: a.visit_note.doctor_notes,
-          prescription: a.visit_note.prescription ? JSON.parse(a.visit_note.prescription) : [],
-          ai_patient_summary: a.visit_note.ai_patient_summary,
-          ai_status: a.visit_note.ai_status,
-        }
-      : null,
+    symptom_summary: a.symptom_form ? {
+      symptoms: a.symptom_form.symptoms_text,
+      ai_summary: a.symptom_form.ai_summary ? JSON.parse(a.symptom_form.ai_summary) : null,
+      ai_status: a.symptom_form.ai_status,
+    } : null,
+    visit_note: a.visit_note ? {
+      doctor_notes: a.visit_note.doctor_notes,
+      prescription: a.visit_note.prescription ? JSON.parse(a.visit_note.prescription) : [],
+      ai_patient_summary: a.visit_note.ai_patient_summary,
+      ai_status: a.visit_note.ai_status,
+    } : null,
   }));
 
   return res.json({ appointments: formatted });
 }
+
+export async function joinWaitlist(req: AuthenticatedRequest, res: Response) {
+  const patientId = req.user!.userId;
+  const doctorId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const { date } = req.body;
+
+  if (!date || typeof date !== 'string') {
+    return res.status(400).json({ error: 'Preferred date (YYYY-MM-DD) is required' });
+  }
+
+  const existing = await prisma.waitlistEntry.findFirst({
+    where: {
+      patient_id: patientId,
+      doctor_id: doctorId,
+      preferred_date: date,
+      status: 'waiting',
+    },
+  });
+
+  if (existing) {
+    return res.json({ message: 'You are already on the waitlist for this date.', waitlist: existing });
+  }
+
+  const entry = await prisma.waitlistEntry.create({
+    data: {
+      patient_id: patientId,
+      doctor_id: doctorId,
+      preferred_date: date,
+      status: 'waiting',
+    },
+  });
+
+  return res.status(201).json({
+    message: 'Successfully added to waitlist! You will be automatically notified if a slot opens up.',
+    waitlist: entry,
+  });
+}
+
+
