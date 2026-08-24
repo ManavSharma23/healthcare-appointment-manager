@@ -651,14 +651,35 @@ async function populateDoctorWorkstationDropdown() {
 
 async function switchDoctorWorkstationRoster(email) {
   try {
-    const res = await fetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: 'password123' })
-    });
-    const data = await res.json();
-    if (data.accessToken) {
-      tokens.doctor = data.accessToken;
+    let accessToken = null;
+    
+    // First try admin token endpoint (works for all doctors regardless of custom password)
+    if (tokens.admin) {
+      const resA = await fetch(`${API_BASE}/admin/doctors/token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${tokens.admin}`
+        },
+        body: JSON.stringify({ email })
+      });
+      const dataA = await resA.json();
+      if (dataA.accessToken) accessToken = dataA.accessToken;
+    }
+
+    // Fallback to standard login for default seeded doctors
+    if (!accessToken) {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: 'password123' })
+      });
+      const data = await res.json();
+      if (data.accessToken) accessToken = data.accessToken;
+    }
+
+    if (accessToken) {
+      tokens.doctor = accessToken;
       
       const select = document.getElementById('docWorkstationSelect');
       const selectedOption = select ? select.options[select.selectedIndex] : null;
@@ -673,6 +694,8 @@ async function switchDoctorWorkstationRoster(email) {
 
       showToast(`Switched workstation to ${name}`, 'info');
       loadDoctorSchedule();
+    } else {
+      showToast('Could not authenticate selected doctor workstation', 'error');
     }
   } catch (err) {
     showToast('Failed to switch doctor workstation', 'error');

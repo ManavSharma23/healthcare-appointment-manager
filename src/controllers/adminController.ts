@@ -257,4 +257,22 @@ export async function retryNotification(req: Request, res: Response) {
   return res.json({ message: 'Notification queued for manual retry' });
 }
 
+export async function getDoctorToken(req: Request, res: Response) {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: 'Doctor email is required' });
+  }
 
+  const doctor = await prisma.user.findFirst({
+    where: { email: email.trim().toLowerCase(), role: 'doctor' }
+  });
+
+  if (!doctor) {
+    return res.status(404).json({ error: 'Doctor not found' });
+  }
+
+  const { generateAccessToken } = require('../utils/auth');
+  const accessToken = generateAccessToken({ userId: doctor.id, email: doctor.email, role: 'doctor' });
+
+  return res.json({ accessToken, doctor: { id: doctor.id, name: doctor.name, email: doctor.email } });
+}

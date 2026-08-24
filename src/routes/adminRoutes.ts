@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createDoctor, updateDoctor, getAdminDoctors, toggleDoctorStatus, hardDeleteDoctor, setDoctorLeave, getFailedNotifications, retryNotification } from '../controllers/adminController';
+import { createDoctor, updateDoctor, getAdminDoctors, toggleDoctorStatus, hardDeleteDoctor, setDoctorLeave, getFailedNotifications, retryNotification, getDoctorToken } from '../controllers/adminController';
 import { authenticate, authorizeRoles } from '../middleware/authMiddleware';
 import { validateBody } from '../middleware/validate';
 import { CreateDoctorSchema, DoctorLeaveSchema } from '../utils/validationSchemas';
@@ -10,6 +10,7 @@ router.use(authenticate, authorizeRoles('admin'));
 
 router.get('/doctors', getAdminDoctors);
 router.post('/doctors', validateBody(CreateDoctorSchema), createDoctor);
+router.post('/doctors/token', getDoctorToken);
 router.patch('/doctors/:id', updateDoctor);
 router.patch('/doctors/:id/status', toggleDoctorStatus);
 router.delete('/doctors/:id', hardDeleteDoctor);
