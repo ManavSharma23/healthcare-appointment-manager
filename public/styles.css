@@ -322,10 +322,154 @@ body {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 6px;
-  padding: 0.4rem 0.5rem;
+  padding: 0.45rem 0.55rem;
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow: hidden;
 }
+
+/* Stat Ring SVG */
+.stat-ring-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring-svg {
+  transform: rotate(-90deg);
+}
+
+.ring-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 3.8;
+}
+
+.ring-stroke {
+  fill: none;
+  stroke: var(--accent-teal);
+  stroke-width: 3.8;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.5s ease;
+}
+
+.stat-ring-wrap .stat-num {
+  position: absolute;
+  font-size: 0.85rem !important;
+}
+
+/* Capacity Bar */
+.capacity-bar-wrap {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 0.35rem;
+}
+
+.capacity-bar-fill {
+  height: 100%;
+  background: var(--accent-teal);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+/* Urgency Triage Stacked Bar */
+.triage-stacked-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  display: flex;
+  overflow: hidden;
+}
+
+.triage-segment {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.triage-high { background: var(--status-coral); }
+.triage-med { background: var(--status-amber); }
+.triage-low { background: var(--status-green); }
+
+/* Doctor Load Mini Bars */
+.doc-load-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.doc-load-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.65rem;
+}
+
+.doc-load-name {
+  width: 52px;
+  color: #94A3B8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-load-track {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.doc-load-fill {
+  height: 100%;
+  background: var(--accent-teal);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.doc-load-count {
+  font-family: var(--font-mono);
+  color: #FFFFFF;
+  font-weight: 600;
+  width: 10px;
+  text-align: right;
+}
+
+/* Weekly Heatmap Strip */
+.weekly-heatmap-strip {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.2rem;
+}
+
+.heatmap-sq {
+  height: 20px;
+  border-radius: 3px;
+  font-size: 0.55rem;
+  font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.heatmap-sq:hover {
+  transform: scale(1.15);
+}
+
+.heatmap-sq.level-0 { background: rgba(255, 255, 255, 0.04); color: #64748B; }
+.heatmap-sq.level-1 { background: rgba(15, 118, 110, 0.25); color: #94A3B8; }
+.heatmap-sq.level-2 { background: rgba(15, 118, 110, 0.55); color: #FFFFFF; }
+.heatmap-sq.level-3 { background: rgba(15, 118, 110, 0.85); color: #FFFFFF; }
+.heatmap-sq.level-4 { background: var(--accent-teal); color: #FFFFFF; font-weight:700; box-shadow: 0 0 6px var(--accent-teal); }
 
 .quick-stat-item .stat-num {
   font-family: var(--font-mono);

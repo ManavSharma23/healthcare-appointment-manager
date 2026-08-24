@@ -90,12 +90,14 @@ function switchDashboard(role) {
     patient: { name: 'Jane Doe', email: 'patient@clinic.com' },
     doctor: { name: 'Dr. Sarah Jenkins', email: 'doctor@clinic.com' },
     admin: { name: 'System Admin', email: 'admin@clinic.com' },
+    analytics: { name: 'System Admin', email: 'admin@clinic.com' },
     superadmin: { name: 'Super Admin', email: 'dev@system.internal' },
   };
   const roleHeaders = {
     patient: { title: 'Patient Scheduling & Intake', sub: 'Select doctor, reserve ledger slots, and review AI clinical triages' },
     doctor: { title: 'Doctor Workstation', sub: 'Inspect daily appointment schedule, AI symptom summaries, and clinical notes' },
     admin: { title: 'Administration Console', sub: 'Manage doctor accounts, schedule leaves with conflict handling, and monitor dead-letter logs' },
+    analytics: { title: 'Insights & Clinical Analytics', sub: '7-day appointment volume trends, specialization demand, and no-show rate intelligence' },
     superadmin: { title: '⚡ Super Admin Workstation', sub: 'System configuration, DB maintenance, elevated access audit log viewer — RESTRICTED ACCESS' },
   };
 

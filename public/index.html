@@ -58,6 +58,12 @@
               </span>
               <span>Administration</span>
             </button>
+            <button class="nav-item" onclick="switchDashboard('analytics')">
+              <span class="nav-icon-svg">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+              </span>
+              <span>Insights & Analytics</span>
+            </button>
             <button id="superAdminNavItem" class="nav-item nav-item-amber hidden" onclick="switchDashboard('superadmin')">
               <span class="nav-icon-svg">
                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
@@ -67,7 +73,7 @@
           </div>
         </div>
 
-        <!-- Quick Stats Mini Panel -->
+        <!-- Quick Stats Mini Panel (Rich Clinical Data Visualizations) -->
         <div class="sidebar-quick-stats">
           <div class="quick-stats-header">
             <span class="quick-stats-title">LIVE CLINICAL AGGREGATES</span>
@@ -88,14 +94,90 @@
               </div>
             </div>
           </div>
+
           <div class="quick-stats-grid">
-            <div class="quick-stat-item">
-              <span class="stat-num counter-anim" id="sideStatAppts">3</span>
-              <span class="stat-lbl">Active Slots</span>
+            <!-- Stat Box 1: Active Slots with Ring & Sparkline -->
+            <div class="quick-stat-item sparkline-bg">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="stat-ring-wrap">
+                  <svg class="ring-svg" width="28" height="28" viewBox="0 0 36 36">
+                    <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path class="ring-stroke" stroke-dasharray="60, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  </svg>
+                  <span class="stat-num counter-anim" id="sideStatAppts">3</span>
+                </div>
+                <!-- Sparkline SVG -->
+                <svg class="sparkline-svg" width="45" height="18" viewBox="0 0 50 20">
+                  <path d="M0 15 L10 12 L20 18 L30 8 L40 10 L50 3" fill="none" stroke="var(--accent-teal)" stroke-width="2" />
+                </svg>
+              </div>
+              <span class="stat-lbl" style="margin-top:0.25rem;">Active Slots</span>
+              <!-- Mini Progress / Capacity Bar -->
+              <div class="capacity-bar-wrap" title="Capacity: 3 of 8 slots filled today">
+                <div class="capacity-bar-fill" style="width: 37.5%;"></div>
+              </div>
+              <div style="font-size:0.62rem; color:var(--text-muted); margin-top:0.15rem; font-family:var(--font-mono);">3 / 8 Capacity</div>
             </div>
-            <div class="quick-stat-item">
-              <span class="stat-num counter-anim stat-neutral" id="sideStatLeaves">0</span>
-              <span class="stat-lbl">On Leave</span>
+
+            <!-- Stat Box 2: On Leave with Sparkline -->
+            <div class="quick-stat-item sparkline-bg">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="stat-num counter-anim stat-neutral" id="sideStatLeaves">0</span>
+                <svg class="sparkline-svg" width="45" height="18" viewBox="0 0 50 20">
+                  <path d="M0 10 L15 10 L25 10 L35 10 L50 10" fill="none" stroke="#64748B" stroke-width="2" />
+                </svg>
+              </div>
+              <span class="stat-lbl" style="margin-top:0.25rem;">On Leave</span>
+              <div style="font-size:0.62rem; color:var(--status-green); margin-top:0.35rem; font-weight:600;">Full Roster Active</div>
+            </div>
+          </div>
+
+          <!-- Urgency Triage Stacked Mini-Bar -->
+          <div style="margin-top:0.75rem;">
+            <div style="display:flex; justify-content:space-between; font-size:0.65rem; color:#64748B; font-weight:700; margin-bottom:0.25rem;">
+              <span>CLINICAL TRIAGE DISTRIBUTION</span>
+              <span>1 High • 1 Med</span>
+            </div>
+            <div class="triage-stacked-bar">
+              <div class="triage-segment triage-high" style="width:50%;" title="High Urgency: 1 case"></div>
+              <div class="triage-segment triage-med" style="width:50%;" title="Medium Urgency: 1 case"></div>
+              <div class="triage-segment triage-low" style="width:0%;" title="Low Urgency: 0 cases"></div>
+            </div>
+          </div>
+
+          <!-- Doctor Load Comparison (Tiny Horizontal Bars) -->
+          <div style="margin-top:0.75rem;">
+            <div style="font-size:0.65rem; color:#64748B; font-weight:700; margin-bottom:0.35rem;">DOCTOR SCHEDULE LOAD</div>
+            <div class="doc-load-list">
+              <div class="doc-load-row">
+                <span class="doc-load-name">Dr. Sarah</span>
+                <div class="doc-load-track"><div class="doc-load-fill" style="width: 75%;"></div></div>
+                <span class="doc-load-count">2</span>
+              </div>
+              <div class="doc-load-row">
+                <span class="doc-load-name">Dr. Alex</span>
+                <div class="doc-load-track"><div class="doc-load-fill" style="width: 35%;"></div></div>
+                <span class="doc-load-count">1</span>
+              </div>
+              <div class="doc-load-row">
+                <span class="doc-load-name">Dr. Agam</span>
+                <div class="doc-load-track"><div class="doc-load-fill" style="width: 0%;"></div></div>
+                <span class="doc-load-count">0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weekly Heatmap Strip -->
+          <div style="margin-top:0.75rem;">
+            <div style="font-size:0.65rem; color:#64748B; font-weight:700; margin-bottom:0.35rem;">WEEKLY DENSITY HEATMAP</div>
+            <div class="weekly-heatmap-strip">
+              <div class="heatmap-sq level-2" title="Mon: 3 Appts">Mon</div>
+              <div class="heatmap-sq level-3" title="Tue: 5 Appts">Tue</div>
+              <div class="heatmap-sq level-1" title="Wed: 1 Appt">Wed</div>
+              <div class="heatmap-sq level-4" title="Thu: 7 Appts">Thu</div>
+              <div class="heatmap-sq level-2" title="Fri: 4 Appts">Fri</div>
+              <div class="heatmap-sq level-0" title="Sat: Closed">Sat</div>
+              <div class="heatmap-sq level-0" title="Sun: Closed">Sun</div>
             </div>
           </div>
         </div>
