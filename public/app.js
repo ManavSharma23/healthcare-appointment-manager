@@ -62,7 +62,8 @@ function refreshActivePortal() {
 }
 
 function switchAccountRole(role) {
-  document.getElementById('roleSelector').value = role;
+  const sel = document.getElementById('roleSelector');
+  if (sel) sel.value = role;
   switchDashboard(role);
 }
 
@@ -364,6 +365,11 @@ async function triggerReserveHold() {
       selectedSlotStart = null;
       document.getElementById('slotActionPanel').classList.add('hidden');
       document.getElementById('activeHoldSection').classList.remove('hidden');
+      setTimeout(() => {
+        document.getElementById('activeHoldSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const symptomsInput = document.getElementById('symptomsInput');
+        if (symptomsInput) symptomsInput.focus();
+      }, 100);
 
       // Start live 5-minute hold progress countdown timer
       startHoldCountdownTimer(5 * 60);
