@@ -120,11 +120,32 @@
           <h1 id="workspaceTitle">Patient Scheduling & Intake</h1>
           <div class="workspace-subtitle" id="workspaceSub">Select doctor, reserve ledger slots, and review AI clinical triages</div>
         </div>
-        <div class="top-controls" style="display:flex; align-items:center; gap:0.75rem;">
-          <div class="global-search-wrap" style="position:relative; width:260px;">
-            <input type="text" id="globalSearchInput" placeholder="🔍 Search patient, doctor, or slot..." oninput="handleGlobalSearch(this.value)" style="width:100%; padding:0.35rem 0.75rem; font-size:0.8rem; border-radius:20px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-primary);">
-            <div id="globalSearchResults" class="global-search-dropdown hidden"></div>
+          <!-- Sound Alert Effect Audio Element -->
+          <audio id="notifSoundAudio" preload="auto" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU1vT18A/////w=="></audio>
+          
+          <!-- Real-Time Notification Bell & Toast Toggle -->
+          <button class="btn btn-outline btn-sm" id="notifBellBtn" onclick="toggleNotifPanel(event)" title="Notifications & Booking Alerts" style="position:relative; display:flex; align-items:center; gap:0.35rem;">
+            <span>🔔</span>
+            <span id="notifBadgeDot" class="status-pulse-slow" style="width:7px; height:7px; background:var(--accent-teal); border-radius:50%; display:inline-block;"></span>
+          </button>
+
+          <!-- Notification History Popover Panel -->
+          <div id="notifPopoverPanel" class="notif-popover-panel hidden" onclick="event.stopPropagation()">
+            <div class="flex-between" style="padding:0.6rem 0.8rem; border-bottom:1px solid var(--border-color); font-weight:700; font-size:0.8rem;">
+              <span>System Alerts & Notifications</span>
+              <span style="font-size:0.68rem; color:var(--accent-teal); cursor:pointer;" onclick="clearNotifLogs()">Clear</span>
+            </div>
+            <div id="notifLogFeed" class="notif-log-feed">
+              <div style="font-size:0.75rem; color:var(--text-muted); padding:0.75rem; text-align:center;">No new system alerts.</div>
+            </div>
           </div>
+
+          <!-- Light/Dark Mode Theme Toggle Button -->
+          <button class="btn btn-outline btn-sm" id="themeToggleBtn" onclick="toggleAppTheme()" title="Toggle Dark/Light Mode Theme" style="display:flex; align-items:center; gap:0.35rem;">
+            <span id="themeToggleIcon">🌙</span>
+            <span id="themeToggleText">Dark Mode</span>
+          </button>
+
           <span class="sync-chip" onclick="alert('Google Calendar Sync Status: Active ✅\nAppointments automatically synchronized to doctor & patient calendars.')" style="cursor:pointer;" title="Click for calendar sync status">Calendar Connected</span>
           <button class="btn btn-outline btn-sm" onclick="refreshActivePortal()">Refresh Data</button>
         </div>
@@ -221,7 +242,10 @@
                 </div>
               </div>
 
-              <div class="section-divider-label">UPCOMING & ACTIVE VISITS</div>
+              <div class="flex-between" style="margin-bottom:0.5rem;">
+                <div class="section-divider-label" style="margin-bottom:0;">UPCOMING & ACTIVE VISITS</div>
+                <button class="btn btn-teal btn-sm" onclick="openMedicalFileModal()" style="font-size:0.75rem;">📋 View Patient Medical Record & History</button>
+              </div>
               <div id="patientAppointmentsList" class="clinical-feed"></div>
             </div>
           </div>
@@ -269,6 +293,24 @@
               <div class="section-divider-label" style="margin-top:1.5rem;">NEXT CONFIRMED VISIT</div>
               <div id="docNextAppointmentBox" class="next-visit-box">
                 <div style="font-size:0.85rem; color:var(--text-muted);">No confirmed upcoming visits for this date filter.</div>
+              </div>
+
+              <!-- Doctor Shift & Break Time Scheduler Widget -->
+              <div class="section-divider-label" style="margin-top:1.5rem;">CLINIC SHIFT & BREAK TIME SCHEDULER</div>
+              <div style="background:var(--bg-main); border:1px solid var(--border-color); border-radius:6px; padding:0.85rem;">
+                <div class="flex-between" style="font-size:0.8rem; margin-bottom:0.5rem;">
+                  <span><strong>Morning Shift:</strong> 09:00 - 13:00</span>
+                  <span class="sync-chip" style="font-size:0.65rem; padding:0.15rem 0.4rem;">Active</span>
+                </div>
+                <div class="flex-between" style="font-size:0.8rem; margin-bottom:0.5rem;">
+                  <span><strong>Lunch Break:</strong> 13:00 - 14:00</span>
+                  <span style="font-size:0.7rem; color:var(--status-amber); font-family:var(--font-mono);">☕ Blocked</span>
+                </div>
+                <div class="flex-between" style="font-size:0.8rem;">
+                  <span><strong>Afternoon Shift:</strong> 14:00 - 17:00</span>
+                  <span class="sync-chip" style="font-size:0.65rem; padding:0.15rem 0.4rem;">Active</span>
+                </div>
+                <button class="btn btn-outline btn-sm btn-full" style="margin-top:0.75rem; font-size:0.75rem;" onclick="alert('Shift Configuration:\nMorning: 09:00-13:00\nLunch Break: 13:00-14:00 (Auto-blocked from booking)\nAfternoon: 14:00-17:00\nStatus: Saved to ledger rules.')">Configure Shift & Break Hours</button>
               </div>
             </div>
           </div>
@@ -856,6 +898,57 @@
             <button type="submit" class="btn btn-warning btn-sm">Unlock Elevated Controls</button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Patient Medical File & Prescription History Drawer Modal -->
+  <div id="patientMedicalFileModal" class="modal-backdrop hidden">
+    <div class="modal-card" style="max-width:650px;">
+      <div class="modal-header flex-between">
+        <h3 style="display:flex; align-items:center; gap:0.5rem;">
+          <span>📋</span> Patient Medical Record & History File
+        </h3>
+        <button class="btn btn-outline btn-sm" onclick="closeMedicalFileModal()" style="padding:0.15rem 0.4rem; font-size:0.75rem;">✕ Close</button>
+      </div>
+      <div class="modal-body" style="padding-top:0.5rem;">
+        <div style="background:var(--bg-main); border:1px solid var(--border-color); padding:0.85rem; border-radius:6px; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <strong style="font-size:0.95rem; color:var(--text-primary);">Jane Doe</strong>
+            <div style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono);">MRN-884920 · DOB: 14/05/1990 · Blood Group: O+</div>
+          </div>
+          <button class="btn btn-teal btn-sm" onclick="window.print()">Export Full Medical File (PDF)</button>
+        </div>
+
+        <div class="section-divider-label">CONSULTATION & PRESCRIPTION HISTORY</div>
+        
+        <!-- Record 1 -->
+        <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:6px; padding:0.85rem; margin-bottom:0.75rem;">
+          <div class="flex-between" style="font-size:0.8rem; margin-bottom:0.35rem;">
+            <strong>Cardiology Consultation — Dr. Sarah Jenkins</strong>
+            <span style="font-family:var(--font-mono); color:var(--text-muted); font-size:0.75rem;">22/08/2026, 16:00</span>
+          </div>
+          <div style="font-size:0.78rem; color:var(--text-body); margin-bottom:0.4rem;">
+            <em>Primary Symptom:</em> Sharp chest pain radiating to left shoulder on exertion.
+          </div>
+          <div style="background:rgba(15, 118, 110, 0.1); border-left:3px solid var(--accent-teal); padding:0.4rem 0.6rem; font-size:0.75rem; border-radius:0 4px 4px 0;">
+            <strong>Prescription:</strong> Nitroglycerin 0.4mg sublingual PRN for acute chest discomfort. Aspirin 81mg daily.
+          </div>
+        </div>
+
+        <!-- Record 2 -->
+        <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:6px; padding:0.85rem;">
+          <div class="flex-between" style="font-size:0.8rem; margin-bottom:0.35rem;">
+            <strong>General Surgery Intake — Dr. Manav Sharma</strong>
+            <span style="font-family:var(--font-mono); color:var(--text-muted); font-size:0.75rem;">15/07/2026, 11:30</span>
+          </div>
+          <div style="font-size:0.78rem; color:var(--text-body); margin-bottom:0.4rem;">
+            <em>Primary Symptom:</em> Routine post-op evaluation & abdominal incision check.
+          </div>
+          <div style="background:rgba(15, 118, 110, 0.1); border-left:3px solid var(--accent-teal); padding:0.4rem 0.6rem; font-size:0.75rem; border-radius:0 4px 4px 0;">
+            <strong>Prescription:</strong> Amoxicillin 500mg TID × 7 days completed. Wounds well healed.
+          </div>
+        </div>
       </div>
     </div>
   </div>

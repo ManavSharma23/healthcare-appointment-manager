@@ -117,11 +117,12 @@ function switchDashboard(role) {
 
   const devNav = document.getElementById('developerToolsNav');
   if (devNav) {
-    // Keep developer tools nav visible as long as elevated session is active or role is admin
     const stored = sessionStorage.getItem(SUPER_ADMIN_SESSION_KEY);
     const isElevatedActive = stored && Date.now() < parseInt(stored);
     if (role === 'admin' || role === 'superadmin' || isElevatedActive) {
       devNav.classList.remove('hidden');
+    } else {
+      devNav.classList.add('hidden');
     }
   }
 
@@ -1353,6 +1354,78 @@ function toggleProfileDropdown(e) {
   }
 }
 
+// Theme Toggle Handler
+function toggleAppTheme() {
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', newTheme);
+  
+  const iconEl = document.getElementById('themeToggleIcon');
+  const textEl = document.getElementById('themeToggleText');
+  if (newTheme === 'dark') {
+    if (iconEl) iconEl.innerText = '☀️';
+    if (textEl) textEl.innerText = 'Light Mode';
+  } else {
+    if (iconEl) iconEl.innerText = '🌙';
+    if (textEl) textEl.innerText = 'Dark Mode';
+  }
+}
+
+// Notification Popover & Sound Alert Engine
+const notifLogs = [];
+
+function playAlertSound() {
+  try {
+    const audio = document.getElementById('notifSoundAudio');
+    if (audio) {
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
+    }
+  } catch (err) {}
+}
+
+function pushNotifAlert(title, message) {
+  playAlertSound();
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  notifLogs.unshift({ title, message, time });
+  
+  const feed = document.getElementById('notifLogFeed');
+  if (feed) {
+    feed.innerHTML = notifLogs.map(n => `
+      <div class="notif-log-item">
+        <div class="flex-between">
+          <strong style="color:var(--text-primary);">${n.title}</strong>
+          <span style="font-family:var(--font-mono); font-size:0.65rem; color:var(--text-muted);">${n.time}</span>
+        </div>
+        <div style="color:var(--text-muted); margin-top:0.25rem;">${n.message}</div>
+      </div>
+    `).join('');
+  }
+}
+
+function toggleNotifPanel(e) {
+  e.stopPropagation();
+  const panel = document.getElementById('notifPopoverPanel');
+  if (panel) panel.classList.toggle('hidden');
+}
+
+function clearNotifLogs() {
+  notifLogs.length = 0;
+  const feed = document.getElementById('notifLogFeed');
+  if (feed) feed.innerHTML = '<div style="font-size:0.75rem; color:var(--text-muted); padding:0.75rem; text-align:center;">No new system alerts.</div>';
+}
+
+// Patient Medical Record File Modal
+function openMedicalFileModal() {
+  const modal = document.getElementById('patientMedicalFileModal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeMedicalFileModal() {
+  const modal = document.getElementById('patientMedicalFileModal');
+  if (modal) modal.classList.add('hidden');
+}
+
 // Dismiss popovers on outside click
 document.addEventListener('click', (e) => {
   const statDropdown = document.getElementById('sidebarStatDropdown');
@@ -1366,6 +1439,10 @@ document.addEventListener('click', (e) => {
   const globalSearchDropdown = document.getElementById('globalSearchResults');
   if (globalSearchDropdown && !globalSearchDropdown.classList.contains('hidden')) {
     globalSearchDropdown.classList.add('hidden');
+  }
+  const notifPanel = document.getElementById('notifPopoverPanel');
+  if (notifPanel && !notifPanel.classList.contains('hidden')) {
+    notifPanel.classList.add('hidden');
   }
 });
 

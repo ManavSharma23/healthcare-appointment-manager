@@ -23,6 +23,46 @@
   --font-mono: 'IBM Plex Mono', monospace;
 }
 
+[data-theme="dark"] {
+  --bg-sidebar: #0f172a;
+  --bg-main: #0b0f19;
+  --bg-card: #1e293b;
+  --border-color: #334155;
+  --border-dark: #1e293b;
+  --text-primary: #f8fafc;
+  --text-body: #cbd5e1;
+  --text-muted: #94a3b8;
+  --accent-teal-light: rgba(15, 118, 110, 0.2);
+}
+
+.notif-popover-panel {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  width: 280px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  z-index: 2500;
+  overflow: hidden;
+}
+
+.notif-log-feed {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.notif-log-item {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.notif-log-item:last-child {
+  border-bottom: none;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
