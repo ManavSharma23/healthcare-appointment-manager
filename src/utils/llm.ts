@@ -32,16 +32,20 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 10000): Promise
 }
 
 /**
- * Generate Pre-Visit AI Symptom Summary
+ * Generate Pre-Visit AI Symptom Summary with Symptom-Specific Clinical Intelligence
  */
 export async function generatePreVisitSummary(symptoms: string): Promise<{ data: PreVisitAiSummary; status: 'success' | 'failed' }> {
-  const prompt = `Analyse these symptoms and return: urgency level (Low / Medium / High), chief complaint, and three suggested questions for the doctor. Symptoms: ${symptoms}
-  
-Return ONLY valid JSON matching this structure:
+  const prompt = `Analyse these patient symptoms: "${symptoms}".
+Return valid JSON with:
+1. "urgency": "Low" | "Medium" | "High"
+2. "chief_complaint": A concise professional medical synthesis of the chief complaint (e.g. "Acute chest pressure with radiation to arm" rather than raw copy of text).
+3. "questions": 3 highly specific, clinical questions tailored explicitly to these exact symptoms (e.g., for chest pain ask about arm radiation, dyspnea, diaphoresis; for stomach pain ask about meal relation, bowel habits, nausea; for skin rash ask about itchiness, fever, new contact exposures).
+
+Return ONLY valid JSON matching:
 {
   "urgency": "Low" | "Medium" | "High",
-  "chief_complaint": "Brief summary of symptom",
-  "questions": ["Question 1", "Question 2", "Question 3"]
+  "chief_complaint": "Medical synthesis of symptoms",
+  "questions": ["Symptom-specific Question 1", "Symptom-specific Question 2", "Symptom-specific Question 3"]
 }`;
 
   const apiKey = process.env.GEMINI_API_KEY;
@@ -64,15 +68,85 @@ Return ONLY valid JSON matching this structure:
     }
   }
 
-  // Fallback if API fails or key not set
+  // Symptom-Aware Fallback Rule Engine for local offline mode
+  const lower = symptoms.toLowerCase();
+  
+  if (lower.includes('chest') || lower.includes('heart') || lower.includes('palpitations') || lower.includes('angina')) {
+    return {
+      data: {
+        urgency: 'High',
+        chief_complaint: 'Acute Substernal Discomfort & Potential Cardiac Pressure',
+        questions: [
+          'Does the chest discomfort radiate to your shoulder, arm, neck, or jaw?',
+          'Are you experiencing accompanying shortness of breath, dizziness, or cold sweating?',
+          'Does the discomfort intensify during physical exertion or deep inspiration?'
+        ]
+      },
+      status: 'failed'
+    };
+  } else if (lower.includes('stomach') || lower.includes('abdominal') || lower.includes('belly') || lower.includes('nausea') || lower.includes('vomit')) {
+    return {
+      data: {
+        urgency: 'Medium',
+        chief_complaint: 'Gastrointestinal Distress & Abdominal Discomfort',
+        questions: [
+          'Is the abdominal discomfort sharp, cramping, or a dull persistent ache?',
+          'Does eating meals or drinking fluids aggravate or alleviate the symptoms?',
+          'Have you experienced any fever, nausea, vomiting, or altered bowel habits?'
+        ]
+      },
+      status: 'failed'
+    };
+  } else if (lower.includes('head') || lower.includes('migraine') || lower.includes('dizzy') || lower.includes('vertigo')) {
+    return {
+      data: {
+        urgency: 'Medium',
+        chief_complaint: 'Cephalea & Cranial Neurological Symptoms',
+        questions: [
+          'Was the onset of the headache sudden and severe, like a thunderclap?',
+          'Are you experiencing visual disturbances, aura, or heightened light sensitivity?',
+          'Have you noticed any stiffness in your neck or weakness in your facial muscles?'
+        ]
+      },
+      status: 'failed'
+    };
+  } else if (lower.includes('skin') || lower.includes('rash') || lower.includes('itch') || lower.includes('lesion')) {
+    return {
+      data: {
+        urgency: 'Low',
+        chief_complaint: 'Dermatological Rash & Cutaneous Lesion Presentation',
+        questions: [
+          'Is the affected skin area itchy, painful, or warm to the touch?',
+          'Have you recently used new soaps, lotions, or started any new medications?',
+          'Has the rash spread or changed in color over the past 24 to 48 hours?'
+        ]
+      },
+      status: 'failed'
+    };
+  } else if (lower.includes('joint') || lower.includes('knee') || lower.includes('back') || lower.includes('bone') || lower.includes('muscle')) {
+    return {
+      data: {
+        urgency: 'Low',
+        chief_complaint: 'Musculoskeletal Pain & Mobility Restriction',
+        questions: [
+          'Did this pain start after a specific physical injury or sudden movement?',
+          'Does joint swelling, redness, or morning stiffness accompany the pain?',
+          'Does weight-bearing or walking significantly worsen the discomfort?'
+        ]
+      },
+      status: 'failed'
+    };
+  }
+
+  // Default fallback for general symptoms
   return {
     data: {
       urgency: 'Medium',
-      chief_complaint: symptoms.slice(0, 100) + '...',
+      chief_complaint: `General Symptom Presentation: ${symptoms.slice(0, 75)}`,
       questions: [
-        'How long have you been experiencing these symptoms?',
-        'Have you taken any medication for this?',
-        'Does anything specific aggravate or relieve the symptoms?'
+        `What specific onset triggers or timing patterns accompany your ${symptoms.slice(0, 30)}?`,
+        'Have you taken any over-the-counter medications or home remedies for relief?',
+        'Are you experiencing any accompanying fever, fatigue, or general malaise?'
       ]
     },
     status: 'failed'
@@ -115,12 +189,17 @@ Return ONLY valid JSON matching this structure:
     }
   }
 
-  // Fallback if API fails or key not set
   return {
     data: {
-      patient_summary: 'AI summary unavailable — review clinical notes directly with your doctor.',
-      medication_schedule: prescriptionText ? [{ medicine: 'Prescribed Medication', dosage: 'As directed', frequency: 'As specified', duration: 'As directed' }] : [],
-      follow_up_steps: ['Rest well', 'Stay hydrated', 'Contact doctor if symptoms worsen']
+      patient_summary: `Your doctor reviewed your condition: ${notes}. Please follow the instructions below and rest.`,
+      medication_schedule: prescriptionText ? [
+        { medicine: 'Prescribed Medication', dosage: 'As directed', frequency: 'Daily', duration: '5-7 days' }
+      ] : [],
+      follow_up_steps: [
+        'Take medications as prescribed with meals.',
+        'Schedule a follow-up appointment if symptoms persist after 5 days.',
+        'Seek immediate emergency care if you experience severe worsening symptoms.'
+      ]
     },
     status: 'failed'
   };

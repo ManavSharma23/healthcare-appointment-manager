@@ -78,8 +78,10 @@ export async function getDoctorAppointments(req: AuthenticatedRequest, res: Resp
 export async function getSymptomSummary(req: AuthenticatedRequest, res: Response) {
   const { id } = req.params;
 
+  const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+
   const symptomForm = await prisma.symptomForm.findUnique({
-    where: { appointment_id: id },
+    where: { appointment_id: idParam },
     include: {
       appointment: { include: { patient: { select: { name: true, email: true } } } },
     },
@@ -91,7 +93,7 @@ export async function getSymptomSummary(req: AuthenticatedRequest, res: Response
 
   return res.json({
     symptomForm: {
-      patient_name: symptomForm.appointment.patient.name,
+      patient_name: symptomForm.appointment?.patient?.name || 'Patient',
       symptoms: symptomForm.symptoms_text,
       ai_summary: symptomForm.ai_summary ? JSON.parse(symptomForm.ai_summary) : null,
       ai_status: symptomForm.ai_status,
@@ -100,10 +102,10 @@ export async function getSymptomSummary(req: AuthenticatedRequest, res: Response
 }
 
 export async function submitNotes(req: AuthenticatedRequest, res: Response) {
-  const { id } = req.params;
+  const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const { doctor_notes, prescription } = req.body;
 
-  const appointment = await prisma.appointment.findUnique({ where: { id } });
+  const appointment = await prisma.appointment.findUnique({ where: { id: idParam } });
   if (!appointment) {
     return res.status(404).json({ error: 'Appointment not found' });
   }
@@ -122,9 +124,9 @@ export async function submitNotes(req: AuthenticatedRequest, res: Response) {
   );
 
   const visitNote = await prisma.visitNote.upsert({
-    where: { appointment_id: id },
+    where: { appointment_id: idParam },
     create: {
-      appointment_id: id,
+      appointment_id: idParam,
       doctor_notes,
       prescription: prescriptionJson,
       ai_patient_summary: aiPostVisit.patient_summary,
@@ -140,23 +142,24 @@ export async function submitNotes(req: AuthenticatedRequest, res: Response) {
 
   // Mark appointment as completed
   await prisma.appointment.update({
-    where: { id },
+    where: { id: idParam },
     data: { status: 'completed' },
   });
 
   // Create medication reminders if prescription provided
   if (prescription && prescription.length > 0) {
-    await createMedicationReminders(id, prescription);
+    await createMedicationReminders(idParam, prescription);
   }
 
   // Emit event
   appEventEmitter.emit('visit.completed', {
-    appointmentId: id,
+    appointmentId: idParam,
     patientId: appointment.patient_id,
     doctorId: appointment.doctor_id,
     slotStart: appointment.slot_start,
     slotEnd: appointment.slot_end,
   });
+
 
   return res.json({
     message: 'Post-visit notes and prescription submitted successfully',
