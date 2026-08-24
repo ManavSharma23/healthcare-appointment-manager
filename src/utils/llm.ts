@@ -190,10 +190,10 @@ Return ONLY valid JSON matching this structure:
     }
   }
 
-  // Intelligent Dynamic Fallback Generator (synthesizes doctor notes into structured patient summary)
+  // Dynamic Patient Summary Generator
   const cleanNotes = notes.trim();
   const summaryText = cleanNotes.length > 0 
-    ? `Doctor's Clinical Assessment & Care Plan:\n"${cleanNotes}"\n\nPlease follow the prescribed treatment guidelines and reach out to the clinic if symptoms worsen.`
+    ? `${cleanNotes}\n\nCare Guidance: Please follow the prescribed care instructions closely and rest. Reach out to the clinic if you notice any unexpected symptoms.`
     : `Your doctor completed the clinical review. Please follow standard care instructions and rest.`;
 
   return {
