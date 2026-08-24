@@ -129,6 +129,7 @@ function switchDashboard(role) {
 
   if (role === 'patient') {
     loadDoctors();
+  } else if (role === 'patientAppts') {
     loadPatientAppointments();
   } else if (role === 'doctor') {
     populateDoctorWorkstationDropdown();
@@ -142,6 +143,21 @@ function switchDashboard(role) {
     loadSuperAdminAuditLogs();
     loadAdminDoctorsList();
   }
+}
+
+let activeApptFilter = 'ongoing';
+
+function switchApptFeedTab(filter) {
+  activeApptFilter = filter;
+  const btnOngoing = document.getElementById('btnTabOngoingAppts');
+  const btnCompleted = document.getElementById('btnTabCompletedAppts');
+  const btnCancelled = document.getElementById('btnTabCancelledAppts');
+
+  if (btnOngoing) btnOngoing.className = filter === 'ongoing' ? 'btn btn-teal btn-sm' : 'btn btn-outline btn-sm';
+  if (btnCompleted) btnCompleted.className = filter === 'completed' ? 'btn btn-teal btn-sm' : 'btn btn-outline btn-sm';
+  if (btnCancelled) btnCancelled.className = filter === 'cancelled' ? 'btn btn-teal btn-sm' : 'btn btn-outline btn-sm';
+
+  loadPatientAppointments();
 }
 
 async function loadInsightsAnalytics() {
@@ -694,39 +710,55 @@ async function loadPatientAppointments() {
     return card;
   }
 
-  // ── Section: Upcoming ────────────────────────────────────────────────────
-  if (upcomingList.length > 0) {
-    const label = document.createElement('div');
-    label.className = 'section-divider-label';
-    label.innerHTML = `📋 UPCOMING APPOINTMENTS <span style="opacity:0.6;font-weight:400;">(${upcomingList.length})</span>`;
-    container.appendChild(label);
-    upcomingList.forEach(appt => container.appendChild(buildApptCard(appt)));
-  }
-
-  // ── Section: Completed ───────────────────────────────────────────────────
-  if (completedList.length > 0) {
-    const label = document.createElement('div');
-    label.className = 'section-divider-label';
-    label.style.marginTop = upcomingList.length > 0 ? '1.5rem' : '0';
-    label.innerHTML = `✅ COMPLETED VISITS <span style="opacity:0.6;font-weight:400;">(${completedList.length})</span>`;
-    container.appendChild(label);
-    completedList.forEach(appt => container.appendChild(buildApptCard(appt)));
-  }
-
-  // ── Section: Cancelled (collapsible) ─────────────────────────────────────
-  if (cancelledList.length > 0) {
-    const wrapper = document.createElement('div');
-    wrapper.style.marginTop = '1.5rem';
-    wrapper.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-        <span class="section-divider-label" style="margin-bottom:0;">❌ CANCELLED <span style="opacity:0.6;font-weight:400;">(${cancelledList.length})</span></span>
-        <button id="toggleHistoryBtn" class="btn btn-outline btn-sm" style="font-size:0.75rem;" onclick="togglePastHistory()">Show ▼</button>
-      </div>
-      <div id="pastHistoryContainer" class="clinical-feed hidden"></div>
-    `;
-    container.appendChild(wrapper);
-    const feed = wrapper.querySelector('#pastHistoryContainer');
-    cancelledList.forEach(appt => feed.appendChild(buildApptCard(appt, { dimmed: true })));
+  // ── Render list based on activeApptFilter ────────────────────────────────────
+  if (activeApptFilter === 'ongoing') {
+    if (upcomingList.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state-card" style="padding:1.5rem; text-align:center;">
+          <div style="font-size:1.5rem; margin-bottom:0.5rem;">📋</div>
+          <div style="font-weight:600; color:var(--text-primary);">No Upcoming or Ongoing Appointments</div>
+          <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.25rem;">Use the Patient Booking tab to schedule a consultation with a doctor.</div>
+        </div>
+      `;
+    } else {
+      const label = document.createElement('div');
+      label.className = 'section-divider-label';
+      label.innerHTML = `📋 UPCOMING & ONGOING VISITS <span style="opacity:0.6;font-weight:400;">(${upcomingList.length})</span>`;
+      container.appendChild(label);
+      upcomingList.forEach(appt => container.appendChild(buildApptCard(appt)));
+    }
+  } else if (activeApptFilter === 'completed') {
+    if (completedList.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state-card" style="padding:1.5rem; text-align:center;">
+          <div style="font-size:1.5rem; margin-bottom:0.5rem;">✅</div>
+          <div style="font-weight:600; color:var(--text-primary);">No Completed Visits Recorded Yet</div>
+          <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.25rem;">After your doctor completes a consultation and submits visit notes, your post-visit summary will appear here.</div>
+        </div>
+      `;
+    } else {
+      const label = document.createElement('div');
+      label.className = 'section-divider-label';
+      label.innerHTML = `✅ COMPLETED VISITS & POST-VISIT AI SUMMARIES <span style="opacity:0.6;font-weight:400;">(${completedList.length})</span>`;
+      container.appendChild(label);
+      completedList.forEach(appt => container.appendChild(buildApptCard(appt)));
+    }
+  } else if (activeApptFilter === 'cancelled') {
+    if (cancelledList.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state-card" style="padding:1.5rem; text-align:center;">
+          <div style="font-size:1.5rem; margin-bottom:0.5rem;">❌</div>
+          <div style="font-weight:600; color:var(--text-primary);">Zero Cancelled Appointments</div>
+          <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.25rem;">No appointments have been cancelled.</div>
+        </div>
+      `;
+    } else {
+      const label = document.createElement('div');
+      label.className = 'section-divider-label';
+      label.innerHTML = `❌ CANCELLED HISTORY <span style="opacity:0.6;font-weight:400;">(${cancelledList.length})</span>`;
+      container.appendChild(label);
+      cancelledList.forEach(appt => container.appendChild(buildApptCard(appt, { dimmed: true })));
+    }
   }
 }
 

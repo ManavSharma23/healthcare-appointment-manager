@@ -44,7 +44,13 @@
               <span class="nav-icon-svg">
                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
               </span>
-              <span>Patient Scheduling</span>
+              <span>Patient Booking</span>
+            </button>
+            <button class="nav-item" onclick="switchDashboard('patientAppts')">
+              <span class="nav-icon-svg">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+              </span>
+              <span>Appointments & AI Summaries</span>
             </button>
             <button class="nav-item" onclick="switchDashboard('doctor')">
               <span class="nav-icon-svg">
@@ -168,101 +174,107 @@
 
       <div class="workspace-body">
         
-        <!-- PATIENT PORTAL -->
+        <!-- PATIENT BOOKING PORTAL (Front Tab: Dedicated to Slot Booking) -->
         <section id="patientDashboard" class="dashboard-panel active">
-          <div class="grid-2col">
-            <!-- Doctor Directory & Slot Ledger -->
-            <div class="clinical-card">
-              <div class="card-title-row">
-                <h2>Doctor Directory & Slot Ledger</h2>
-                <div class="card-subtitle-text">Real-time availability ledger with 5-minute atomic holds</div>
-              </div>
-
-              <div class="filter-input-wrap">
-                <label class="clinical-label">Filter by Clinical Specialization</label>
-                <select id="patientSpecFilter" onchange="loadDoctors()">
-                  <option value="">All Specializations</option>
-                  <option value="General Medicine">General Medicine</option>
-                  <option value="Cardiology">Cardiology</option>
-                  <option value="Dermatology">Dermatology</option>
-                  <option value="Neurology">Neurology</option>
-                  <option value="Pediatrics">Pediatrics</option>
-                  <option value="Orthopedics">Orthopedics</option>
-                  <option value="Psychiatry">Psychiatry</option>
-                  <option value="General Surgery">General Surgery</option>
-                  <option value="Ophthalmology">Ophthalmology</option>
-                  <option value="Obstetrics & Gynecology">Obstetrics & Gynecology</option>
-                </select>
-              </div>
-
-              <div id="doctorList" class="doctor-ledger-list"></div>
-
-              <!-- Slot Picker — IDs must match app.js -->
-              <div id="slotPickerSection" class="slot-ledger-container hidden">
-                <div class="ledger-header">
-                  <h3>Schedule Ledger: <span id="selectedDoctorName" class="highlight-teal">—</span></h3>
-                  <div class="date-control">
-                    <label>Date:</label>
-                    <input type="date" id="bookingDate" onchange="loadDoctorSlots()">
-                  </div>
-                </div>
-
-                <div class="ledger-legend">
-                  <span class="legend-chip legend-available"><span class="edge-line"></span> Available</span>
-                  <span class="legend-chip legend-held"><span class="edge-line"></span> 5-Min Hold Active</span>
-                  <span class="legend-chip legend-booked"><span class="hatch-box"></span> Booked</span>
-                </div>
-
-                <div id="slotGrid" class="slot-ledger-grid"></div>
-
-                <div id="slotActionPanel" class="slot-action-panel hidden">
-                  <div class="slot-selected-info">
-                    Selected Time: <strong id="selectedTimeText">--:--</strong>
-                  </div>
-                  <button class="btn btn-teal btn-sm" onclick="triggerReserveHold()">
-                    Reserve 5-Minute Hold & Enter Symptoms
-                  </button>
-                </div>
-
-                <div id="bookingMessage" class="status-notice"></div>
-              </div>
+          <div class="clinical-card">
+            <div class="card-title-row">
+              <h2>Doctor Directory & Slot Ledger</h2>
+              <div class="card-subtitle-text">Real-time availability ledger with 5-minute atomic holds</div>
             </div>
 
-            <!-- Symptom Intake & Appointments Column -->
-            <div class="clinical-card">
-              <div class="card-title-row flex-between">
-                <div>
-                  <h2>Symptom Intake & AI Clinical Summaries</h2>
-                  <div class="card-subtitle-text">Pre-visit symptom triage processed via structured LLM schema</div>
-                </div>
-                <button class="btn btn-outline btn-sm" onclick="openMedicalFileModal()" style="font-size:0.75rem;">📋 Medical Record</button>
-              </div>
-
-              <!-- Active Hold Banner — shown once a slot is reserved -->
-              <div id="activeHoldSection" class="hold-ledger-banner hidden">
-                <div class="hold-header-row">
-                  <span class="hold-alert-title">5-MINUTE TRANSACTIONAL HOLD ACTIVE (<span id="holdCountdownText" class="mono-code">05:00</span>)</span>
-                  <button type="button" class="btn btn-outline btn-sm" onclick="releaseCurrentHold()" style="font-size:0.75rem;">Release / Cancel Hold</button>
-                </div>
-                <p class="hold-instruction">Slot locked against double-booking. Complete symptom details below to confirm appointment.</p>
-                <div class="hold-progress-bar-wrap">
-                  <div id="holdProgressBarFill" class="hold-progress-bar-fill"></div>
-                </div>
-
-                <div class="form-group">
-                  <label class="clinical-label">Clinical Symptoms Description</label>
-                  <textarea id="symptomsInput" rows="3" placeholder="Enter patient symptom details, onset duration, and severity for pre-visit clinical triage..."></textarea>
-                </div>
-                <div style="display:flex; gap:0.5rem;">
-                  <button class="btn btn-teal btn-full" onclick="submitSymptomsAndConfirm()">
-                    Submit Symptoms & Confirm Reservation
-                  </button>
-                </div>
-              </div>
-
-              <div class="section-divider-label">UPCOMING & ACTIVE VISITS</div>
-              <div id="patientAppointmentsList" class="clinical-feed"></div>
+            <div class="filter-input-wrap">
+              <label class="clinical-label">Filter by Clinical Specialization</label>
+              <select id="patientSpecFilter" onchange="loadDoctors()">
+                <option value="">All Specializations</option>
+                <option value="General Medicine">General Medicine</option>
+                <option value="Cardiology">Cardiology</option>
+                <option value="Dermatology">Dermatology</option>
+                <option value="Neurology">Neurology</option>
+                <option value="Pediatrics">Pediatrics</option>
+                <option value="Orthopedics">Orthopedics</option>
+                <option value="Psychiatry">Psychiatry</option>
+                <option value="General Surgery">General Surgery</option>
+                <option value="Ophthalmology">Ophthalmology</option>
+                <option value="Obstetrics & Gynecology">Obstetrics & Gynecology</option>
+              </select>
             </div>
+
+            <div id="doctorList" class="doctor-ledger-list"></div>
+
+            <!-- Slot Picker -->
+            <div id="slotPickerSection" class="slot-ledger-container hidden">
+              <div class="ledger-header">
+                <h3>Schedule Ledger: <span id="selectedDoctorName" class="highlight-teal">—</span></h3>
+                <div class="date-control">
+                  <label>Date:</label>
+                  <input type="date" id="bookingDate" onchange="loadDoctorSlots()">
+                </div>
+              </div>
+
+              <div class="ledger-legend">
+                <span class="legend-chip legend-available"><span class="edge-line"></span> Available</span>
+                <span class="legend-chip legend-held"><span class="edge-line"></span> 5-Min Hold Active</span>
+                <span class="legend-chip legend-booked"><span class="hatch-box"></span> Booked</span>
+              </div>
+
+              <div id="slotGrid" class="slot-ledger-grid"></div>
+
+              <div id="slotActionPanel" class="slot-action-panel hidden">
+                <div class="slot-selected-info">
+                  Selected Time: <strong id="selectedTimeText">--:--</strong>
+                </div>
+                <button class="btn btn-teal btn-sm" onclick="triggerReserveHold()">
+                  Reserve 5-Minute Hold & Enter Symptoms
+                </button>
+              </div>
+
+              <div id="bookingMessage" class="status-notice"></div>
+            </div>
+
+            <!-- Active Hold Banner — shown once a slot is reserved -->
+            <div id="activeHoldSection" class="hold-ledger-banner hidden" style="margin-top:1.5rem;">
+              <div class="hold-header-row">
+                <span class="hold-alert-title">5-MINUTE TRANSACTIONAL HOLD ACTIVE (<span id="holdCountdownText" class="mono-code">05:00</span>)</span>
+                <button type="button" class="btn btn-outline btn-sm" onclick="releaseCurrentHold()" style="font-size:0.75rem;">Release / Cancel Hold</button>
+              </div>
+              <p class="hold-instruction">Slot locked against double-booking. Complete symptom details below to confirm appointment.</p>
+              <div class="hold-progress-bar-wrap">
+                <div id="holdProgressBarFill" class="hold-progress-bar-fill"></div>
+              </div>
+
+              <div class="form-group">
+                <label class="clinical-label">Clinical Symptoms Description</label>
+                <textarea id="symptomsInput" rows="3" placeholder="Enter patient symptom details, onset duration, and severity for pre-visit clinical triage..."></textarea>
+              </div>
+              <div style="display:flex; gap:0.5rem;">
+                <button class="btn btn-teal btn-full" onclick="submitSymptomsAndConfirm()">
+                  Submit Symptoms & Confirm Reservation
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SEPARATE TAB: APPOINTMENTS & AI CLINICAL SUMMARIES -->
+        <section id="patientApptsDashboard" class="dashboard-panel">
+          <div class="clinical-card">
+            <div class="card-title-row flex-between">
+              <div>
+                <h2>Symptom Intake & AI Clinical Summaries</h2>
+                <div class="card-subtitle-text">Pre-visit AI symptom triage and doctor's post-visit clinical notes</div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="openMedicalFileModal()" style="font-size:0.75rem;">📋 Medical Record</button>
+            </div>
+
+            <!-- Filter Tabs for Segregating Ongoing / Active vs Completed Appointments -->
+            <div style="display:flex; gap:0.5rem; margin-bottom:1.25rem; border-bottom:1px solid var(--border-color); padding-bottom:0.65rem;">
+              <button id="btnTabOngoingAppts" class="btn btn-teal btn-sm" onclick="switchApptFeedTab('ongoing')">📋 Upcoming & Ongoing Visits</button>
+              <button id="btnTabCompletedAppts" class="btn btn-outline btn-sm" onclick="switchApptFeedTab('completed')">✅ Completed Visits & AI Summaries</button>
+              <button id="btnTabCancelledAppts" class="btn btn-outline btn-sm" onclick="switchApptFeedTab('cancelled')">❌ Cancelled History</button>
+            </div>
+
+            <!-- Appointments List Container -->
+            <div id="patientAppointmentsList" class="clinical-feed"></div>
           </div>
         </section>
 
