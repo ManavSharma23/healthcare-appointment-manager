@@ -20,13 +20,13 @@ export async function createDoctor(req: Request, res: Response) {
     formattedName = `Dr. ${formattedName.substring(3).trim()}`;
   }
 
-  // Check for duplicate name warning
-  const nameMatch = await prisma.user.findFirst({
-    where: {
-      role: 'doctor',
-      name: { equals: formattedName, mode: 'insensitive' },
-    },
+  // Check for duplicate name warning (case-insensitive)
+  const existingDoctors = await prisma.user.findMany({
+    where: { role: 'doctor' }
   });
+  const nameMatch = existingDoctors.find(
+    (d) => d.name.toLowerCase() === formattedName.toLowerCase()
+  );
 
   if (nameMatch) {
     return res.status(400).json({
