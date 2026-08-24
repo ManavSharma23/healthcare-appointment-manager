@@ -116,6 +116,17 @@
                 </div>
 
                 <div id="slotGrid" class="slot-ledger-grid"></div>
+
+                <!-- Action Panel for Selected Slot (Local State -> Explicit Hold API call) -->
+                <div id="slotActionPanel" class="slot-action-panel hidden">
+                  <div class="slot-selected-info">
+                    Selected Time: <strong id="selectedTimeText">--:--</strong>
+                  </div>
+                  <button class="btn btn-teal btn-sm" onclick="triggerReserveHold()">
+                    Reserve 5-Minute Hold & Enter Symptoms
+                  </button>
+                </div>
+
                 <div id="bookingMessage" class="status-notice"></div>
               </div>
             </div>
@@ -145,7 +156,7 @@
                 </div>
               </div>
 
-              <div class="section-divider-label">CONFIRMED APPOINTMENTS FEED</div>
+              <div class="section-divider-label">UPCOMING & ACTIVE VISITS</div>
               <div id="patientAppointmentsList" class="clinical-feed"></div>
             </div>
           </div>

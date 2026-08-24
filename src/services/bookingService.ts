@@ -186,7 +186,17 @@ export async function cancelAppointment(
  * Cron worker to expire held slots past TTL
  */
 export async function expireHeldSlots() {
-  const result = await prisma.appointment.updateMany({
+  // Delete abandoned held slots that expired without symptoms attached to keep DB clean
+  const deleted = await prisma.appointment.deleteMany({
+    where: {
+      status: 'held',
+      expires_at: { lt: new Date() },
+      symptom_form: { is: null },
+    },
+  });
+
+  // Any remaining expired holds marked cancelled
+  const updated = await prisma.appointment.updateMany({
     where: {
       status: 'held',
       expires_at: { lt: new Date() },
@@ -195,5 +205,5 @@ export async function expireHeldSlots() {
       status: 'cancelled',
     },
   });
-  return result.count;
+  return deleted.count + updated.count;
 }

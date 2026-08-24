@@ -43,7 +43,7 @@ body {
   min-height: 100vh;
 }
 
-/* Left-Rail Clinical Sidebar - Widened & No Overflow Clipping */
+/* Left-Rail Clinical Sidebar */
 .sidebar {
   width: 260px;
   background-color: var(--bg-sidebar);
@@ -174,7 +174,6 @@ body {
   color: var(--text-light);
 }
 
-/* Demo Account Switcher Styling */
 .account-switch-wrap {
   margin-top: 0.75rem;
   padding-top: 0.75rem;
@@ -510,6 +509,12 @@ textarea {
   border-color: var(--accent-teal);
 }
 
+.slot-ledger-btn.selected-slot-btn {
+  background: var(--accent-teal-light);
+  border-color: var(--accent-teal);
+  box-shadow: 0 0 0 2px var(--accent-teal);
+}
+
 .slot-ledger-btn.held {
   border-left-color: var(--status-amber);
   background: var(--status-amber-bg);
@@ -526,6 +531,23 @@ textarea {
   );
   color: var(--text-muted);
   cursor: not-allowed;
+}
+
+/* Local Slot Action Panel */
+.slot-action-panel {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  background: var(--accent-teal-light);
+  border: 1px solid var(--accent-teal);
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.slot-selected-info {
+  font-size: 0.85rem;
+  color: var(--text-primary);
 }
 
 /* Hold Banner */
