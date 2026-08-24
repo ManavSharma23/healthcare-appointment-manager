@@ -103,6 +103,11 @@ function switchDashboard(role) {
   document.getElementById('currentUserName').innerText = user.name;
   document.getElementById('currentEmail').innerText = user.email;
 
+  // Update avatar initials
+  const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  const avatarEl = document.getElementById('userAvatarInitials');
+  if (avatarEl) avatarEl.innerText = initials;
+
   const headerMeta = roleHeaders[role] || roleHeaders.patient;
   document.getElementById('workspaceTitle').innerText = headerMeta.title;
   document.getElementById('workspaceSub').innerText = headerMeta.sub;

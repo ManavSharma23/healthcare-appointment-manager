@@ -30,37 +30,73 @@
         <div class="system-subtitle">Clinical Appointment Manager</div>
       </div>
 
-      <!-- Single-line quiet status bar -->
+      <!-- Single-line quiet status bar with slow 3s breathing pulse -->
       <div class="system-status-line">
-        <span class="status-indicator" id="sysStatusDot"></span>
+        <span class="status-indicator status-pulse-slow" id="sysStatusDot"></span>
         <span class="status-text" id="sysStatusText">All Systems Operational</span>
       </div>
 
       <nav class="sidebar-nav">
-        <div class="nav-section-label">Navigation & Workspaces</div>
-        <button class="nav-item active" onclick="switchDashboard('patient')">
-          <span class="nav-icon">▪</span> Patient Scheduling
-        </button>
-        <button class="nav-item" onclick="switchDashboard('doctor')">
-          <span class="nav-icon">▪</span> Doctor Workstation
-        </button>
-        <button class="nav-item" onclick="switchDashboard('admin')">
-          <span class="nav-icon">▪</span> Administration
-        </button>
-        <button id="superAdminNavItem" class="nav-item nav-item-amber hidden" onclick="switchDashboard('superadmin')">
-          <span class="nav-icon">⚡</span> Super Admin Console
-        </button>
+        <div class="nav-section-container">
+          <div class="nav-section-label">Navigation & Workspaces</div>
+          <div class="nav-group-box">
+            <button class="nav-item active" onclick="switchDashboard('patient')">
+              <span class="nav-icon-svg">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              </span>
+              <span>Patient Scheduling</span>
+            </button>
+            <button class="nav-item" onclick="switchDashboard('doctor')">
+              <span class="nav-icon-svg">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+              </span>
+              <span>Doctor Workstation</span>
+            </button>
+            <button class="nav-item" onclick="switchDashboard('admin')">
+              <span class="nav-icon-svg">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+              </span>
+              <span>Administration</span>
+            </button>
+            <button id="superAdminNavItem" class="nav-item nav-item-amber hidden" onclick="switchDashboard('superadmin')">
+              <span class="nav-icon-svg">⚡</span>
+              <span>Super Admin Console</span>
+            </button>
+          </div>
+        </div>
 
-        <div id="developerToolsNav" class="hidden">
-          <div class="nav-section-label" style="margin-top:1.5rem;">Developer Tools</div>
+        <!-- Quick Stats Mini Panel (Fills vertical void with live clinical context) -->
+        <div class="sidebar-quick-stats">
+          <div class="quick-stats-header">
+            <span class="quick-stats-title">LIVE CLINICAL AGGREGATES</span>
+            <span class="quick-stats-badge">Today</span>
+          </div>
+          <div class="quick-stats-grid">
+            <div class="quick-stat-item">
+              <span class="stat-num" id="sideStatAppts">3</span>
+              <span class="stat-lbl">Active Slots</span>
+            </div>
+            <div class="quick-stat-item">
+              <span class="stat-num" id="sideStatLeaves" style="color:var(--status-amber);">0</span>
+              <span class="stat-lbl">On Leave</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Restricted Developer Access Zone -->
+        <div id="developerToolsNav" class="hidden nav-section-container" style="margin-top:1rem;">
+          <div class="nav-section-label">Developer Tools</div>
           <button class="nav-item nav-item-dev" onclick="openSuperAdminModal()">
-            <span class="nav-icon">🔑</span> Developer Access
+            <span class="dev-lock-pulse"></span>
+            <span class="nav-icon-svg">🔑</span>
+            <span>Developer Access</span>
           </button>
         </div>
       </nav>
 
-      <!-- Authenticated Account Switcher -->
+      <!-- Authenticated Account Profile Footer -->
       <div class="sidebar-footer">
+        <div class="user-avatar-circle" id="userAvatarInitials">JD</div>
         <div class="active-user-info">
           <div class="user-role-label" id="currentUserName">Jane Doe</div>
           <div class="user-email-text" id="currentEmail">patient@clinic.com</div>
