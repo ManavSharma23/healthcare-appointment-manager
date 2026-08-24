@@ -120,30 +120,39 @@
           <h1 id="workspaceTitle">Patient Scheduling & Intake</h1>
           <div class="workspace-subtitle" id="workspaceSub">Select doctor, reserve ledger slots, and review AI clinical triages</div>
         </div>
+        <div class="top-controls">
+          <!-- Global Search Input -->
+          <div class="global-search-wrap" style="position:relative; width:220px;">
+            <input type="text" id="globalSearchInput" placeholder="🔍 Search patient, doctor..." oninput="handleGlobalSearch(this.value)" style="width:100%; padding:0.3rem 0.65rem; font-size:0.75rem; border-radius:20px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-primary);">
+            <div id="globalSearchResults" class="global-search-dropdown hidden"></div>
+          </div>
+
           <!-- Sound Alert Effect Audio Element -->
           <audio id="notifSoundAudio" preload="auto" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU1vT18A/////w=="></audio>
           
           <!-- Real-Time Notification Bell & Toast Toggle -->
-          <button class="btn btn-outline btn-sm" id="notifBellBtn" onclick="toggleNotifPanel(event)" title="Notifications & Booking Alerts" style="position:relative; display:flex; align-items:center; gap:0.35rem;">
-            <span>🔔</span>
-            <span id="notifBadgeDot" class="status-pulse-slow" style="width:7px; height:7px; background:var(--accent-teal); border-radius:50%; display:inline-block;"></span>
-          </button>
+          <div style="position:relative;">
+            <button class="btn btn-outline btn-sm" id="notifBellBtn" onclick="toggleNotifPanel(event)" title="Notifications & Booking Alerts" style="display:flex; align-items:center; gap:0.35rem; padding:0.3rem 0.5rem;">
+              <span>🔔</span>
+              <span id="notifBadgeDot" class="status-pulse-slow" style="width:6px; height:6px; background:var(--accent-teal); border-radius:50%; display:inline-block;"></span>
+            </button>
 
-          <!-- Notification History Popover Panel -->
-          <div id="notifPopoverPanel" class="notif-popover-panel hidden" onclick="event.stopPropagation()">
-            <div class="flex-between" style="padding:0.6rem 0.8rem; border-bottom:1px solid var(--border-color); font-weight:700; font-size:0.8rem;">
-              <span>System Alerts & Notifications</span>
-              <span style="font-size:0.68rem; color:var(--accent-teal); cursor:pointer;" onclick="clearNotifLogs()">Clear</span>
-            </div>
-            <div id="notifLogFeed" class="notif-log-feed">
-              <div style="font-size:0.75rem; color:var(--text-muted); padding:0.75rem; text-align:center;">No new system alerts.</div>
+            <!-- Notification History Popover Panel -->
+            <div id="notifPopoverPanel" class="notif-popover-panel hidden" onclick="event.stopPropagation()">
+              <div class="flex-between" style="padding:0.6rem 0.8rem; border-bottom:1px solid var(--border-color); font-weight:700; font-size:0.8rem;">
+                <span>System Alerts & Notifications</span>
+                <span style="font-size:0.68rem; color:var(--accent-teal); cursor:pointer;" onclick="clearNotifLogs()">Clear</span>
+              </div>
+              <div id="notifLogFeed" class="notif-log-feed">
+                <div style="font-size:0.75rem; color:var(--text-muted); padding:0.75rem; text-align:center;">No new system alerts.</div>
+              </div>
             </div>
           </div>
 
           <!-- Light/Dark Mode Theme Toggle Button -->
           <button class="btn btn-outline btn-sm" id="themeToggleBtn" onclick="toggleAppTheme()" title="Toggle Dark/Light Mode Theme" style="display:flex; align-items:center; gap:0.35rem;">
             <span id="themeToggleIcon">🌙</span>
-            <span id="themeToggleText">Dark Mode</span>
+            <span id="themeToggleText">Dark</span>
           </button>
 
           <span class="sync-chip" onclick="alert('Google Calendar Sync Status: Active ✅\nAppointments automatically synchronized to doctor & patient calendars.')" style="cursor:pointer;" title="Click for calendar sync status">Calendar Connected</span>
@@ -215,9 +224,12 @@
 
             <!-- Symptom Intake & Appointments Column -->
             <div class="clinical-card">
-              <div class="card-title-row">
-                <h2>Symptom Intake & AI Clinical Summaries</h2>
-                <div class="card-subtitle-text">Pre-visit symptom triage processed via structured LLM schema</div>
+              <div class="card-title-row flex-between">
+                <div>
+                  <h2>Symptom Intake & AI Clinical Summaries</h2>
+                  <div class="card-subtitle-text">Pre-visit symptom triage processed via structured LLM schema</div>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="openMedicalFileModal()" style="font-size:0.75rem;">📋 Medical Record</button>
               </div>
 
               <!-- Active Hold Banner — shown once a slot is reserved -->
@@ -242,10 +254,7 @@
                 </div>
               </div>
 
-              <div class="flex-between" style="margin-bottom:0.5rem;">
-                <div class="section-divider-label" style="margin-bottom:0;">UPCOMING & ACTIVE VISITS</div>
-                <button class="btn btn-teal btn-sm" onclick="openMedicalFileModal()" style="font-size:0.75rem;">📋 View Patient Medical Record & History</button>
-              </div>
+              <div class="section-divider-label">UPCOMING & ACTIVE VISITS</div>
               <div id="patientAppointmentsList" class="clinical-feed"></div>
             </div>
           </div>
