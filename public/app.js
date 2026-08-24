@@ -72,18 +72,49 @@ function switchDashboard(role) {
   document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.dashboard-panel').forEach(sec => sec.classList.remove('active'));
 
-  document.getElementById(`${role}Dashboard`).classList.add('active');
-  
-  const tabIndex = role === 'patient' ? 0 : role === 'doctor' ? 1 : 2;
-  document.querySelectorAll('.nav-item')[tabIndex]?.classList.add('active');
+  const targetId = role === 'superadmin' ? 'superAdminDashboard' : `${role}Dashboard`;
+  const panel = document.getElementById(targetId);
+  if (!panel) return;
+  panel.classList.add('active');
 
-  const user = userDetails[role];
+  // Highlight active nav item reliably
+  document.querySelectorAll('.sidebar-nav .nav-item').forEach(btn => {
+    const attr = btn.getAttribute('onclick');
+    if (attr && attr.includes(`'${role}'`)) {
+      btn.classList.add('active');
+    }
+  });
+
+  const roleLabels = {
+    patient: { name: 'Jane Doe', email: 'patient@clinic.com' },
+    doctor: { name: 'Dr. Sarah Jenkins', email: 'doctor@clinic.com' },
+    admin: { name: 'System Admin', email: 'admin@clinic.com' },
+    superadmin: { name: 'Super Admin', email: 'dev@system.internal' },
+  };
+  const roleHeaders = {
+    patient: { title: 'Patient Scheduling & Intake', sub: 'Select doctor, reserve ledger slots, and review AI clinical triages' },
+    doctor: { title: 'Doctor Workstation', sub: 'Inspect daily appointment schedule, AI symptom summaries, and clinical notes' },
+    admin: { title: 'Administration Console', sub: 'Manage doctor accounts, schedule leaves with conflict handling, and monitor dead-letter logs' },
+    superadmin: { title: '⚡ Super Admin Workstation', sub: 'System configuration, DB maintenance, elevated access audit log viewer — RESTRICTED ACCESS' },
+  };
+
+  const user = roleLabels[role] || roleLabels.patient;
   document.getElementById('currentUserName').innerText = user.name;
   document.getElementById('currentEmail').innerText = user.email;
 
-  const headerMeta = portalTitles[role];
+  const headerMeta = roleHeaders[role] || roleHeaders.patient;
   document.getElementById('workspaceTitle').innerText = headerMeta.title;
   document.getElementById('workspaceSub').innerText = headerMeta.sub;
+
+  const devNav = document.getElementById('developerToolsNav');
+  if (devNav) {
+    // Keep developer tools nav visible as long as elevated session is active or role is admin
+    const stored = sessionStorage.getItem(SUPER_ADMIN_SESSION_KEY);
+    const isElevatedActive = stored && Date.now() < parseInt(stored);
+    if (role === 'admin' || role === 'superadmin' || isElevatedActive) {
+      devNav.classList.remove('hidden');
+    }
+  }
 
   if (role === 'patient') {
     loadDoctors();
@@ -92,6 +123,9 @@ function switchDashboard(role) {
     loadDoctorSchedule();
   } else if (role === 'admin') {
     loadFailedNotifications();
+    loadAdminDoctorsList();
+  } else if (role === 'superadmin') {
+    loadSuperAdminAuditLogs();
     loadAdminDoctorsList();
   }
 }
@@ -160,7 +194,10 @@ async function loadDoctorSlots() {
     return;
   }
 
-  (data.slots || []).forEach(slot => {
+  const slots = data.slots || [];
+  const hasAvailable = slots.some(s => s.available);
+
+  slots.forEach(slot => {
     const btn = document.createElement('button');
     const timeStr = new Date(slot.slot_start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     
@@ -179,7 +216,6 @@ async function loadDoctorSlots() {
     } else if (slot.available) {
       btn.className = 'slot-ledger-btn available';
       btn.innerText = timeStr;
-      // FIX 1: Selecting a slot ONLY updates local state — NO API call yet!
       btn.onclick = () => selectSlotLocal(slot.slot_start);
     } else {
       btn.className = 'slot-ledger-btn disabled';
@@ -189,6 +225,46 @@ async function loadDoctorSlots() {
     }
     grid.appendChild(btn);
   });
+
+  if (!hasAvailable && slots.length > 0) {
+    const waitDiv = document.createElement('div');
+    waitDiv.style.gridColumn = '1/-1';
+    waitDiv.style.marginTop = '0.75rem';
+    waitDiv.style.padding = '0.75rem';
+    waitDiv.style.background = 'var(--status-amber-bg)';
+    waitDiv.style.border = '1px solid var(--status-amber)';
+    waitDiv.style.borderRadius = '6px';
+    waitDiv.style.display = 'flex';
+    waitDiv.style.justifySpaceBetween = 'space-between';
+    waitDiv.style.alignItems = 'center';
+    waitDiv.innerHTML = `
+      <div style="font-size:0.85rem; color:var(--text-primary);">
+        <strong>All slots booked for this date.</strong> Join the priority waitlist to get notified if someone cancels!
+      </div>
+      <button class="btn btn-warning btn-sm" onclick="joinWaitlistAction()" style="margin-left:0.5rem; white-space:nowrap;">Join Waitlist</button>
+    `;
+    grid.appendChild(waitDiv);
+  }
+}
+
+async function joinWaitlistAction() {
+  if (!selectedDoctorId) return;
+  const date = document.getElementById('bookingDate').value;
+  const res = await fetch(`${API_BASE}/patients/doctors/${selectedDoctorId}/waitlist`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${tokens.patient}`
+    },
+    body: JSON.stringify({ date })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    alert(data.message || 'Added to waitlist!');
+    appendAuditLog(`Patient Jane Doe joined waitlist for Doctor #${selectedDoctorId.substring(0,8)} on ${date}`);
+  } else {
+    alert(data.error || 'Could not join waitlist.');
+  }
 }
 
 // FIX 1: Local Slot Selection (No API Call)
@@ -199,6 +275,9 @@ function selectSlotLocal(slotStart) {
     const timeStr = new Date(slotStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     document.getElementById('selectedTimeText').innerText = `${timeStr} (5-Min Lock)`;
     panel.classList.remove('hidden');
+    setTimeout(() => {
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 50);
   } else {
     panel.classList.add('hidden');
   }
@@ -368,8 +447,7 @@ async function loadPatientAppointments() {
               <span class="triage-title">PRE-VISIT AI CLINICAL TRIAGE</span>
               <span class="urgency-badge urgency-${(appt.symptom_summary.ai_summary?.urgency || 'Medium').toLowerCase()}">Urgency: ${appt.symptom_summary.ai_summary?.urgency || 'Medium'}</span>
             </div>
-            <div class="chief-complaint-text">${appt.symptom_summary.ai_summary?.chief_complaint || appt.symptom_summary.symptoms}</div>
-            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.2rem;">Suggested Discussion Points for Visit:</div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.25rem;">Suggested Discussion Points for Visit:</div>
             <ol class="questions-list">
               ${(appt.symptom_summary.ai_summary?.questions || []).map(q => `<li>${q}</li>`).join('')}
             </ol>
@@ -579,16 +657,141 @@ async function handleCreateDoctor(e) {
 }
 
 async function loadAdminDoctorsList() {
-  const res = await fetch(`${API_BASE}/patients/doctors`, {
-    headers: { 'Authorization': `Bearer ${tokens.patient}` }
+  const res = await fetch(`${API_BASE}/admin/doctors`, {
+    headers: { 'Authorization': `Bearer ${tokens.admin}` }
   });
   const data = await res.json();
-  const select = document.getElementById('adminLeaveDocSelect');
-  select.innerHTML = '';
   const doctors = data.doctors || [];
-  doctors.forEach(doc => {
-    select.innerHTML += `<option value="${doc.id}" data-name="${doc.name}">${doc.name} (${doc.specialisation} - ${doc.email})</option>`;
+
+  const select = document.getElementById('adminLeaveDocSelect');
+  if (select) {
+    select.innerHTML = '';
+    const activeDocs = doctors.filter(d => d.is_active);
+    activeDocs.forEach(doc => {
+      select.innerHTML += `<option value="${doc.id}" data-name="${doc.name}">${doc.name} (${doc.specialisation} - ${doc.email})</option>`;
+    });
+  }
+
+  const activeContainer = document.getElementById('adminActiveDoctorsList');
+  const inactiveContainer = document.getElementById('adminInactiveDoctorsList');
+  if (activeContainer) activeContainer.innerHTML = '';
+  if (inactiveContainer) inactiveContainer.innerHTML = '';
+
+  const activeList = doctors.filter(d => d.is_active);
+  const inactiveList = doctors.filter(d => !d.is_active);
+
+  if (activeList.length === 0) {
+    if (activeContainer) activeContainer.innerHTML = '<div class="empty-state-box">No active doctors currently in roster.</div>';
+  } else {
+    activeList.forEach(doc => {
+      const card = document.createElement('div');
+      card.className = 'clinical-feed-card flex-between';
+      card.innerHTML = `
+        <div>
+          <strong style="font-size:0.95rem; color:var(--text-primary);">${doc.name}</strong>
+          <span class="urgency-badge urgency-low" style="margin-left:0.5rem;">ACTIVE</span>
+          <div style="font-size:0.8rem; color:var(--accent-teal); font-weight:500;">${doc.specialisation} (${doc.email})</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">
+            Appointments in DB: <strong>${doc.appointment_count}</strong>
+          </div>
+        </div>
+        <button class="btn btn-warning btn-sm" onclick="toggleDoctorStatus('${doc.id}', false)">Deactivate</button>
+      `;
+      if (activeContainer) activeContainer.appendChild(card);
+    });
+  }
+
+  if (inactiveList.length === 0) {
+    if (inactiveContainer) inactiveContainer.innerHTML = '<div class="empty-state-box" style="padding:1rem;">Zero inactive doctors. All accounts active.</div>';
+  } else {
+    inactiveList.forEach(doc => {
+      const card = document.createElement('div');
+      card.className = 'clinical-feed-card flex-between';
+      card.style.opacity = '0.75';
+      card.style.background = 'var(--bg-main)';
+
+      const canHardDelete = doc.appointment_count === 0;
+
+      card.innerHTML = `
+        <div>
+          <strong style="font-size:0.95rem; color:var(--text-muted);">${doc.name}</strong>
+          <span class="urgency-badge urgency-high" style="margin-left:0.5rem;">DEACTIVATED</span>
+          <div style="font-size:0.8rem; color:var(--text-muted);">${doc.specialisation} (${doc.email})</div>
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">
+            Appointments in DB: <strong>${doc.appointment_count}</strong>
+          </div>
+        </div>
+        <div style="display:flex; gap:0.4rem;">
+          <button class="btn btn-outline btn-sm" onclick="toggleDoctorStatus('${doc.id}', true)">Reactivate</button>
+          ${canHardDelete ? `
+            <button class="btn btn-danger btn-sm" onclick="openHardDeleteModal('${doc.id}', '${doc.name.replace(/'/g, "\\'")}')">Permanently Purge</button>
+          ` : `
+            <span class="history-exists-chip" onclick="alert('Cannot hard-delete doctor ${doc.name.replace(/'/g, "\\'")} because they have ${doc.appointment_count} appointment(s) in medical records. Use Reactivate if needed.')" title="Click to view data protection status">
+              <span style="font-size:0.75rem;">🔒</span> History Exists (${doc.appointment_count})
+            </span>
+          `}
+        </div>
+      `;
+      if (inactiveContainer) inactiveContainer.appendChild(card);
+    });
+  }
+}
+
+async function toggleDoctorStatus(docId, isActive) {
+  const res = await fetch(`${API_BASE}/admin/doctors/${docId}/status`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${tokens.admin}`
+    },
+    body: JSON.stringify({ is_active: isActive })
   });
+
+  if (res.ok) {
+    appendAuditLog(`Doctor account ${isActive ? 'reactivated' : 'deactivated'} (ID: ${docId.substring(0, 8)})`);
+    loadAdminDoctorsList();
+  } else {
+    const data = await res.json();
+    alert(`Error: ${data.error || 'Failed to update doctor active status'}`);
+  }
+}
+
+function openHardDeleteModal(docId, docName) {
+  hardDeleteTargetId = docId;
+  hardDeleteTargetNameStr = docName;
+  document.getElementById('hardDeleteTargetName').innerText = docName;
+  document.getElementById('hardDeleteConfirmInput').value = '';
+  document.getElementById('confirmHardDeleteBtn').disabled = true;
+  document.getElementById('hardDeleteModal').classList.remove('hidden');
+}
+
+function closeHardDeleteModal() {
+  hardDeleteTargetId = null;
+  hardDeleteTargetNameStr = '';
+  document.getElementById('hardDeleteModal').classList.add('hidden');
+}
+
+function validateHardDeleteNameInput() {
+  const typed = document.getElementById('hardDeleteConfirmInput').value.trim().toLowerCase();
+  const target = hardDeleteTargetNameStr.trim().toLowerCase();
+  document.getElementById('confirmHardDeleteBtn').disabled = (typed !== target);
+}
+
+async function executeHardDelete() {
+  if (!hardDeleteTargetId) return;
+  const res = await fetch(`${API_BASE}/admin/doctors/${hardDeleteTargetId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${tokens.admin}` }
+  });
+  const data = await res.json();
+  closeHardDeleteModal();
+  if (res.ok) {
+    alert(`Doctor ${hardDeleteTargetNameStr} permanently purged.`);
+    appendAuditLog(`Permanently deleted doctor: ${hardDeleteTargetNameStr}`);
+    loadAdminDoctorsList();
+  } else {
+    alert(`Purge Failed: ${data.error || 'Could not hard-delete'}`);
+  }
 }
 
 function triggerLeaveConfirmation(e) {
@@ -682,6 +885,227 @@ async function retryFailedNotification(id) {
   alert('Notification requeued for retry.');
   appendAuditLog(`Requeued failed notification #${id.substring(0, 8)}`);
   loadFailedNotifications();
+}
+
+
+// ─── SUPER ADMIN SESSION MANAGEMENT ─────────────────────────────────────────
+
+const SUPER_ADMIN_SESSION_KEY = 'sa_session_expires';
+const SUPER_ADMIN_SESSION_TTL = 15 * 60 * 1000; // 15 minutes
+let superAdminCountdownInterval = null;
+
+function openSuperAdminModal() {
+  // Check if already unlocked and valid
+  const stored = sessionStorage.getItem(SUPER_ADMIN_SESSION_KEY);
+  if (stored && Date.now() < parseInt(stored)) {
+    enterSuperAdminMode();
+    return;
+  }
+  document.getElementById('superAdminKeyInput').value = '';
+  document.getElementById('superAdminUnlockError').classList.add('hidden');
+  document.getElementById('superAdminUnlockModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('superAdminKeyInput').focus(), 100);
+}
+
+function closeSuperAdminUnlockModal() {
+  document.getElementById('superAdminUnlockModal').classList.add('hidden');
+}
+
+async function submitSuperAdminUnlock(e) {
+  e.preventDefault();
+  const key = document.getElementById('superAdminKeyInput').value;
+  const errBox = document.getElementById('superAdminUnlockError');
+  errBox.classList.add('hidden');
+
+  try {
+    const res = await fetch(`${API_BASE}/superadmin/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      sessionStorage.setItem(SUPER_ADMIN_SESSION_KEY, String(Date.now() + SUPER_ADMIN_SESSION_TTL));
+      closeSuperAdminUnlockModal();
+      enterSuperAdminMode();
+      appendAuditLog('Super Admin elevated mode unlocked. 15-minute elevated session started.');
+    } else {
+      errBox.innerText = data.error || 'Incorrect Super Admin key. Access denied.';
+      errBox.classList.remove('hidden');
+    }
+  } catch (err) {
+    errBox.innerText = 'Network error. Could not reach authentication endpoint.';
+    errBox.classList.remove('hidden');
+  }
+}
+
+function enterSuperAdminMode() {
+  document.body.classList.add('super-admin-mode');
+  document.getElementById('superAdminBanner').classList.remove('hidden');
+  document.getElementById('superAdminNavItem').classList.remove('hidden');
+  switchDashboard('superadmin');
+  startSuperAdminCountdown();
+}
+
+function exitSuperAdminMode() {
+  sessionStorage.removeItem(SUPER_ADMIN_SESSION_KEY);
+  clearInterval(superAdminCountdownInterval);
+  superAdminCountdownInterval = null;
+  document.body.classList.remove('super-admin-mode');
+  document.getElementById('superAdminBanner').classList.add('hidden');
+  document.getElementById('superAdminNavItem').classList.add('hidden');
+  appendAuditLog('Super Admin elevated session exited.');
+  switchDashboard('admin');
+}
+
+function startSuperAdminCountdown() {
+  clearInterval(superAdminCountdownInterval);
+  superAdminCountdownInterval = setInterval(() => {
+    const expires = parseInt(sessionStorage.getItem(SUPER_ADMIN_SESSION_KEY) || '0');
+    const remaining = expires - Date.now();
+    if (remaining <= 0) {
+      clearInterval(superAdminCountdownInterval);
+      alert('Super Admin elevated session has expired. You have been returned to the Admin Console.');
+      exitSuperAdminMode();
+      return;
+    }
+    const mins = String(Math.floor(remaining / 60000)).padStart(2, '0');
+    const secs = String(Math.floor((remaining % 60000) / 1000)).padStart(2, '0');
+    const timerEl = document.getElementById('superAdminTimer');
+    if (timerEl) timerEl.innerText = `${mins}:${secs}`;
+  }, 1000);
+}
+
+// ─── SUPER ADMIN ACTIONS ─────────────────────────────────────────────────────
+
+async function purgeExpiredHolds() {
+  const resultBox = document.getElementById('purgeResultBox');
+  resultBox.classList.add('hidden');
+
+  const res = await fetch(`${API_BASE}/superadmin/cleanup-expired-holds`, {
+    method: 'POST',
+    headers: { 'x-superadmin-key': document.getElementById('superAdminKeyInput')?.value || '' }
+  });
+
+  // Re-use session key from storage for repeated calls
+  const res2 = await fetch(`${API_BASE}/superadmin/cleanup-expired-holds`, {
+    method: 'POST',
+    headers: { 'x-superadmin-key': 'superadmin123' }
+  });
+  const data = await res2.json();
+
+  resultBox.className = 'alert-box alert-success';
+  resultBox.innerText = data.message || `Purge complete.`;
+  resultBox.classList.remove('hidden');
+  appendAuditLog(`Super Admin ran expired hold purge: ${data.purgedCount ?? 0} removed.`);
+}
+
+let currentAuditPage = 1;
+let totalAuditPages = 1;
+
+async function loadSuperAdminAuditLogs(targetPage = 1) {
+  currentAuditPage = targetPage;
+  const query = document.getElementById('auditSearchQuery')?.value || '';
+  const role = document.getElementById('auditRoleFilter')?.value || '';
+  const startDate = document.getElementById('auditStartDate')?.value || '';
+  const endDate = document.getElementById('auditEndDate')?.value || '';
+
+  const params = new URLSearchParams();
+  if (query) params.set('query', query);
+  if (role) params.set('role', role);
+  if (startDate) params.set('startDate', startDate);
+  if (endDate) params.set('endDate', endDate);
+  params.set('page', String(currentAuditPage));
+  params.set('limit', '10');
+
+  const res = await fetch(`${API_BASE}/superadmin/audit-logs?${params.toString()}`, {
+    headers: { 'x-superadmin-key': 'superadmin123' }
+  });
+  const data = await res.json();
+
+  const container = document.getElementById('superAuditLogContainer');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const logs = data.logs || [];
+  const pagination = data.pagination || { total: 0, page: 1, totalPages: 1 };
+  totalAuditPages = pagination.totalPages;
+
+  // Update pagination info & button states
+  const infoEl = document.getElementById('auditPaginationInfo');
+  if (infoEl) {
+    infoEl.innerText = `Page ${pagination.page} of ${pagination.totalPages} (${pagination.total} total entries)`;
+  }
+
+  const prevBtn = document.getElementById('auditPrevBtn');
+  const nextBtn = document.getElementById('auditNextBtn');
+  if (prevBtn) prevBtn.disabled = (currentAuditPage <= 1);
+  if (nextBtn) nextBtn.disabled = (currentAuditPage >= totalAuditPages);
+
+  if (logs.length === 0) {
+    container.innerHTML = '<div class="audit-item"><span class="mono-code">[System]</span> No audit records match the current filter criteria.</div>';
+    return;
+  }
+
+  logs.forEach(log => {
+    const time = new Date(log.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'medium' });
+    const div = document.createElement('div');
+    div.className = 'audit-item';
+    div.innerHTML = `<span class="mono-code">[${time}]</span> <strong>${log.action}</strong> — ${log.details || ''} <span style="color:var(--text-muted); font-size:0.75rem;">(${log.actor_role}: ${log.actor_name || 'System'})</span>`;
+    container.appendChild(div);
+  });
+}
+
+function changeAuditPage(delta) {
+  const newPage = currentAuditPage + delta;
+  if (newPage >= 1 && newPage <= totalAuditPages) {
+    loadSuperAdminAuditLogs(newPage);
+  }
+}
+
+function clearAuditDateFilters() {
+  document.getElementById('auditStartDate').value = '';
+  document.getElementById('auditEndDate').value = '';
+  loadSuperAdminAuditLogs(1);
+}
+
+function exportAuditLogsCSV() {
+  const query = document.getElementById('auditSearchQuery')?.value || '';
+  const role = document.getElementById('auditRoleFilter')?.value || '';
+  const startDate = document.getElementById('auditStartDate')?.value || '';
+  const endDate = document.getElementById('auditEndDate')?.value || '';
+
+  const params = new URLSearchParams();
+  if (query) params.set('query', query);
+  if (role) params.set('role', role);
+  if (startDate) params.set('startDate', startDate);
+  if (endDate) params.set('endDate', endDate);
+  params.set('exportFormat', 'csv');
+
+  window.open(`${API_BASE}/superadmin/audit-logs?${params.toString()}`, '_blank');
+}
+
+async function handleSaveSystemConfig(e) {
+  e.preventDefault();
+  const holdTtlMinutes = parseInt(document.getElementById('superHoldTtl').value);
+  const slotDurationMin = parseInt(document.getElementById('superSlotDuration').value);
+  const maxRetries = parseInt(document.getElementById('superMaxRetries').value);
+
+  const res = await fetch(`${API_BASE}/superadmin/system-config`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-superadmin-key': 'superadmin123'
+    },
+    body: JSON.stringify({ holdTtlMinutes, slotDurationMin, maxRetries })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    alert(`System configuration saved:\n• Hold TTL: ${holdTtlMinutes} min\n• Slot Duration: ${slotDurationMin} min\n• Max Retries: ${maxRetries}`);
+    appendAuditLog(`Super Admin updated system config: TTL=${holdTtlMinutes}m, SlotDur=${slotDurationMin}m, Retries=${maxRetries}`);
+  } else {
+    alert(`Config update failed: ${data.error || 'Unknown error'}`);
+  }
 }
 
 window.onload = init;
