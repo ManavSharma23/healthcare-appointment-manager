@@ -1282,4 +1282,56 @@ function printVisitSummary() {
   window.print();
 }
 
+// ─── SIDEBAR QUICK STATS & PROFILE POPOVER HELPERS ─────────────────────────
+function updateSidebarStats(filterMode = 'today') {
+  const apptsEl = document.getElementById('sideStatAppts');
+  const leavesEl = document.getElementById('sideStatLeaves');
+
+  if (!apptsEl || !leavesEl) return;
+
+  const apptVal = filterMode === 'today' ? 3 : 14;
+  const leaveVal = filterMode === 'today' ? 0 : 2;
+
+  // Add counter pulse animation
+  apptsEl.classList.add('counter-pulse');
+  leavesEl.classList.add('counter-pulse');
+
+  setTimeout(() => {
+    apptsEl.innerText = apptVal;
+    leavesEl.innerText = leaveVal;
+
+    // Warning color ONLY when leaves > 0
+    if (leaveVal > 0) {
+      leavesEl.className = 'stat-num counter-anim stat-warning';
+    } else {
+      leavesEl.className = 'stat-num counter-anim stat-neutral';
+    }
+
+    setTimeout(() => {
+      apptsEl.classList.remove('counter-pulse');
+      leavesEl.classList.remove('counter-pulse');
+    }, 400);
+  }, 150);
+}
+
+function toggleProfileDropdown(e) {
+  e.stopPropagation();
+  const dropdown = document.getElementById('profileDropdown');
+  if (dropdown) {
+    dropdown.classList.toggle('hidden');
+  }
+}
+
+// Dismiss popovers on outside click
+document.addEventListener('click', (e) => {
+  const profileDropdown = document.getElementById('profileDropdown');
+  if (profileDropdown && !profileDropdown.classList.contains('hidden')) {
+    profileDropdown.classList.add('hidden');
+  }
+  const globalSearchDropdown = document.getElementById('globalSearchResults');
+  if (globalSearchDropdown && !globalSearchDropdown.classList.contains('hidden')) {
+    globalSearchDropdown.classList.add('hidden');
+  }
+});
+
 window.onload = init;
