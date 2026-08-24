@@ -174,7 +174,8 @@ function selectDoctor(id, name) {
   selectedSlotStart = null;
   document.getElementById('selectedDoctorName').innerText = name;
   document.getElementById('slotPickerSection').classList.remove('hidden');
-  document.getElementById('bookingDate').valueAsDate = new Date();
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('bookingDate').value = today;
   loadDoctorSlots();
 }
 
@@ -188,7 +189,9 @@ async function loadDoctorSlots() {
 
   const grid = document.getElementById('slotGrid');
   grid.innerHTML = '';
-  document.getElementById('slotActionPanel').classList.add('hidden');
+  if (!selectedSlotStart) {
+    document.getElementById('slotActionPanel').classList.add('hidden');
+  }
 
   if (data.message) {
     grid.innerHTML = `<div style="grid-column: 1/-1; color:var(--status-coral); font-size:0.85rem; padding:0.5rem 0;">⚠️ ${data.message}</div>`;
