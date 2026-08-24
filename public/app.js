@@ -142,6 +142,25 @@ function switchDashboard(role) {
   }
 }
 
+function switchLabTab(tab) {
+  const pendingFeed = document.getElementById('pendingLabsFeed');
+  const completedFeed = document.getElementById('completedLabsFeed');
+  const btnPending = document.getElementById('tabPendingLabs');
+  const btnCompleted = document.getElementById('tabCompletedLabs');
+
+  if (tab === 'pending') {
+    pendingFeed.classList.remove('hidden');
+    completedFeed.classList.add('hidden');
+    btnPending.className = 'btn btn-teal btn-sm';
+    btnCompleted.className = 'btn btn-outline btn-sm';
+  } else {
+    pendingFeed.classList.add('hidden');
+    completedFeed.classList.remove('hidden');
+    btnPending.className = 'btn btn-outline btn-sm';
+    btnCompleted.className = 'btn btn-teal btn-sm';
+  }
+}
+
 function appendAuditLog(message) {
   const container = document.getElementById('systemAuditLog');
   if (!container) return;
@@ -493,106 +512,32 @@ async function loadPatientAppointments() {
     card.className = 'clinical-feed-card appt-card';
     if (dimmed) card.style.opacity = '0.65';
 
-    // ── Post-visit summary block (Modular 4-Card & My Care Plan Grid) ───────
+    // ── Post-visit summary block ───────
     const postVisitBlock = isCompleted && appt.visit_note?.ai_patient_summary ? `
-      <div class="post-visit-summary-block" style="margin-top:0.85rem;">
-        
-        <!-- ⭐ MY CARE PLAN HERO CARD -->
-        <div style="background:linear-gradient(135deg, rgba(6,182,212,0.1), rgba(14,116,144,0.05)); border:1px solid var(--accent-teal); border-radius:8px; padding:1.15rem; margin-bottom:0.85rem;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
-            <div style="display:flex; align-items:center; gap:0.5rem;">
-              <span style="font-size:1.1rem;">⭐</span>
-              <strong style="font-family:var(--font-header); font-size:0.9rem; color:var(--text-primary); text-transform:uppercase; letter-spacing:0.04em;">Your Active Care Plan</strong>
-            </div>
-            <span class="urgency-badge urgency-low" style="font-size:0.7rem;">IN PROGRESS</span>
-          </div>
-
-          <div style="font-size:0.85rem; color:var(--text-body); margin-bottom:0.75rem; line-height:1.5;">
-            ${appt.visit_note.ai_patient_summary}
-          </div>
-
-          <!-- Progress Bar -->
-          <div>
-            <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-muted); margin-bottom:0.25rem;">
-              <span>Recovery & Treatment Progress</span>
-              <strong style="color:var(--accent-teal);">60% Complete</strong>
-            </div>
-            <div style="height:7px; background:var(--bg-main); border-radius:99px; overflow:hidden; border:1px solid var(--border-color);">
-              <div style="width:60%; height:100%; background:linear-gradient(90deg, var(--accent-teal), #10b981); border-radius:99px;"></div>
-            </div>
-          </div>
+      <div class="post-visit-summary-block" style="background:var(--bg-surface); border:1px solid var(--border-color); border-left:4px solid var(--status-green); border-radius:6px; padding:0.85rem 1rem; margin-top:0.65rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+          <strong style="font-size:0.8rem; color:#059669; text-transform:uppercase;">✅ Doctor's Post-Visit Summary</strong>
+          <button class="btn btn-outline btn-sm" style="font-size:0.68rem; padding:0.15rem 0.45rem;" onclick="printVisitSummary()">🖨 Print</button>
         </div>
-
-        <!-- 💡 4 SCANNABLE MODULAR CARDS GRID -->
-        <div class="grid-2col" style="gap:0.75rem; margin-bottom:0.85rem;">
-          
-          <!-- Card 1: 💊 Medications -->
-          <div style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:0.85rem 1rem;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-              <strong style="font-size:0.8rem; color:var(--text-primary);">💊 Medications</strong>
-              <span style="font-size:0.68rem; color:var(--text-muted); font-family:var(--font-mono);">Active</span>
-            </div>
-            ${(() => {
-              const rawMeds = appt.visit_note?.prescription || [];
-              const validMeds = rawMeds.filter(p => {
-                const medText = (typeof p === 'object' ? (p.medicine || '') : String(p)).toLowerCase();
-                return medText && !medText.includes('no medicine') && !medText.includes('none');
-              });
-              if (validMeds.length === 0) return '<div style="font-size:0.78rem; color:var(--text-muted);">No prescription required</div>';
-              return validMeds.map(p => {
+        <div style="font-size:0.85rem; color:var(--text-body); line-height:1.5;">${appt.visit_note.ai_patient_summary}</div>
+        ${(() => {
+          const rawMeds = appt.visit_note?.prescription || [];
+          const validMeds = rawMeds.filter(p => {
+            const medText = (typeof p === 'object' ? (p.medicine || '') : String(p)).toLowerCase();
+            return medText && !medText.includes('no medicine') && !medText.includes('none');
+          });
+          if (validMeds.length === 0) return '';
+          return `
+            <div style="display:flex; align-items:center; gap:0.4rem; margin-top:0.5rem; padding-top:0.4rem; border-top:1px solid var(--border-color); font-size:0.75rem;">
+              <span style="color:#059669; font-weight:600;">💊 Prescription:</span>
+              ${validMeds.map(p => {
                 const label = typeof p === 'object' ? (p.medicine || p.name) : String(p);
-                const freq  = typeof p === 'object' && p.frequency ? p.frequency : 'As directed';
-                return `
-                  <div style="font-size:0.8rem; color:var(--text-primary); font-weight:600; margin-top:0.2rem;">${label}</div>
-                  <div style="font-size:0.72rem; color:var(--text-muted);">${freq} · 7 days</div>
-                `;
-              }).join('');
-            })()}
-            <button class="btn btn-outline btn-sm btn-full" style="font-size:0.68rem; margin-top:0.5rem; padding:0.2rem;" onclick="showToast('Medication reminder scheduled', 'success')">⏰ Remind Me</button>
-          </div>
-
-          <!-- Card 2: 🧪 Test & Clinical Results -->
-          <div style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:0.85rem 1rem;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-              <strong style="font-size:0.8rem; color:var(--text-primary);">🧪 Test Results</strong>
-              <span style="font-size:0.68rem; color:#059669; font-weight:600;">Clear</span>
+                const freq  = typeof p === 'object' && p.frequency ? ` · ${p.frequency}` : '';
+                return `<span class="prescription-pill">${label}${freq}</span>`;
+              }).join('')}
             </div>
-            <div style="font-size:0.78rem; color:var(--text-body);">Clinical intake reviewed nominal.</div>
-            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.2rem;">No additional lab work ordered.</div>
-            <button class="btn btn-outline btn-sm btn-full" style="font-size:0.68rem; margin-top:0.5rem; padding:0.2rem;" onclick="showToast('No pending lab tests for this visit', 'info')">View Labs</button>
-          </div>
-
-          <!-- Card 3: 📅 Follow-Up -->
-          <div style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:0.85rem 1rem;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-              <strong style="font-size:0.8rem; color:var(--text-primary);">📅 Follow-Up</strong>
-              <span style="font-size:0.68rem; color:var(--accent-teal); font-weight:600;">7 Days</span>
-            </div>
-            <div style="font-size:0.78rem; color:var(--text-body);">Recommended check-in within 1 week.</div>
-            <button class="btn btn-teal btn-sm btn-full" style="font-size:0.68rem; margin-top:0.5rem; padding:0.2rem;" onclick="switchDashboard('patient'); window.scrollTo({top:0, behavior:'smooth'});">Book Follow-Up</button>
-          </div>
-
-          <!-- Card 4: 📄 Documents -->
-          <div style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:0.85rem 1rem;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-              <strong style="font-size:0.8rem; color:var(--text-primary);">📄 Documents</strong>
-              <span style="font-size:0.68rem; color:var(--text-muted);">PDF</span>
-            </div>
-            <div style="font-size:0.78rem; color:var(--text-body);">Visit Summary · Notes · Prescriptions</div>
-            <button class="btn btn-outline btn-sm btn-full" style="font-size:0.68rem; margin-top:0.5rem; padding:0.2rem;" onclick="printVisitSummary()">🖨 Download PDF</button>
-          </div>
-
-        </div>
-
-        <!-- Emergency Alert Banner -->
-        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(239,68,68,0.06); border:1px solid rgba(239,68,68,0.25); border-radius:6px; padding:0.65rem 0.85rem;">
-          <div style="display:flex; align-items:center; gap:0.5rem;">
-            <span style="font-size:0.9rem;">🚨</span>
-            <span style="font-size:0.75rem; color:#dc2626; font-weight:600;">When to Contact Clinic: Seek immediate help if symptoms worsen or severe side-effects occur.</span>
-          </div>
-          <button class="btn btn-sm" style="font-size:0.68rem; background:#dc2626; color:white; border:none; padding:0.25rem 0.6rem; border-radius:4px; white-space:nowrap;" onclick="alert('EMERGENCY CLINIC HOTLINE: +1 (800) 555-0199\nNearest ER: St. Jude Memorial Hospital (0.8 miles)')">Emergency Help</button>
-        </div>
-
+          `;
+        })()}
       </div>
     ` : '';
 

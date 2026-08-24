@@ -64,6 +64,12 @@
               </span>
               <span>Insights & Analytics</span>
             </button>
+            <button class="nav-item" onclick="switchDashboard('medical')">
+              <span class="nav-icon-svg">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              </span>
+              <span>Medical Records & Labs</span>
+            </button>
             <button id="superAdminNavItem" class="nav-item nav-item-amber hidden" onclick="switchDashboard('superadmin')">
               <span class="nav-icon-svg">
                 <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
@@ -623,6 +629,154 @@
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        <!-- MEDICAL RECORDS & LAB TESTS WORKSPACE -->
+        <section id="medicalDashboard" class="dashboard-panel">
+          <div class="grid-2col">
+            
+            <!-- Left Column: Lab Tests Hub (Pending vs Completed) -->
+            <div class="clinical-card">
+              <div class="card-title-row flex-between">
+                <div>
+                  <h2>🧪 Clinical Lab Tests & Diagnostics Hub</h2>
+                  <div class="card-subtitle-text">Track ordered lab investigations, blood panels, and diagnostic reports</div>
+                </div>
+                <button class="btn btn-teal btn-sm" onclick="showToast('New diagnostic test order requested', 'info')">+ Order Lab Test</button>
+              </div>
+
+              <!-- Lab Test Tabs -->
+              <div style="display:flex; gap:0.5rem; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.5rem;">
+                <button id="tabPendingLabs" class="btn btn-teal btn-sm" onclick="switchLabTab('pending')">Pending Tests (2)</button>
+                <button id="tabCompletedLabs" class="btn btn-outline btn-sm" onclick="switchLabTab('completed')">Completed Reports (4)</button>
+              </div>
+
+              <!-- Pending Labs Feed -->
+              <div id="pendingLabsFeed" class="clinical-feed">
+                <div class="clinical-feed-card" style="border-left:4px solid var(--status-amber);">
+                  <div class="flex-between">
+                    <div>
+                      <strong style="font-size:0.9rem; color:var(--text-primary);">CBC & Complete Blood Count Panel</strong>
+                      <div style="font-size:0.75rem; color:var(--accent-teal); margin-top:0.1rem;">Ordered by Dr. Sarah Jenkins (Cardiology)</div>
+                      <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.25rem;">Sample Collected · Processing at Lab Center</div>
+                    </div>
+                    <span class="urgency-badge urgency-medium">IN PROGRESS</span>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.75rem; padding-top:0.5rem; border-top:1px solid var(--border-color); font-size:0.75rem;">
+                    <span style="color:var(--text-muted);">Est. Result: Today, 6:00 PM</span>
+                    <button class="btn btn-outline btn-sm" style="font-size:0.68rem; padding:0.2rem 0.5rem;" onclick="showToast('Sample status: In Centrifuge Analysis', 'info')">Track Sample</button>
+                  </div>
+                </div>
+
+                <div class="clinical-feed-card" style="border-left:4px solid var(--status-amber);">
+                  <div class="flex-between">
+                    <div>
+                      <strong style="font-size:0.9rem; color:var(--text-primary);">Lipid Profile & Cholesterol Panel</strong>
+                      <div style="font-size:0.75rem; color:var(--accent-teal); margin-top:0.1rem;">Ordered by Dr. Alex Rivera (Dermatology)</div>
+                      <div style="font-size:0.72rem; color:var(--text-muted); margin-top:0.25rem;">Awaiting Fasting Sample Collection</div>
+                    </div>
+                    <span class="urgency-badge urgency-medium">PENDING SAMPLE</span>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.75rem; padding-top:0.5rem; border-top:1px solid var(--border-color); font-size:0.75rem;">
+                    <span style="color:var(--text-muted);">Instructions: 12-hour fasting required</span>
+                    <button class="btn btn-teal btn-sm" style="font-size:0.68rem; padding:0.2rem 0.5rem;" onclick="showToast('Lab appointment booked for tomorrow morning 8:00 AM', 'success')">Schedule Pickup</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Completed Labs Feed (hidden by default) -->
+              <div id="completedLabsFeed" class="clinical-feed hidden">
+                <div class="clinical-feed-card" style="border-left:4px solid var(--status-green);">
+                  <div class="flex-between">
+                    <div>
+                      <strong style="font-size:0.9rem; color:var(--text-primary);">Comprehensive Metabolic Panel (CMP)</strong>
+                      <div style="font-size:0.75rem; color:var(--accent-teal);">Dr. Agam Arora · 22 Aug 2026</div>
+                      <div style="font-size:0.72rem; color:var(--status-green); font-weight:600; margin-top:0.25rem;">● All 14 Biomarkers Normal</div>
+                    </div>
+                    <span class="urgency-badge urgency-low">COMPLETED</span>
+                  </div>
+                  <button class="btn btn-outline btn-sm btn-full" style="font-size:0.7rem; margin-top:0.75rem;" onclick="printVisitSummary()">📄 Download PDF Lab Report</button>
+                </div>
+
+                <div class="clinical-feed-card" style="border-left:4px solid var(--status-green);">
+                  <div class="flex-between">
+                    <div>
+                      <strong style="font-size:0.9rem; color:var(--text-primary);">Thyroid Stimulating Hormone (TSH)</strong>
+                      <div style="font-size:0.75rem; color:var(--accent-teal);">Dr. Jatin Bansal · 15 Aug 2026</div>
+                      <div style="font-size:0.72rem; color:var(--status-green); font-weight:600; margin-top:0.25rem;">● Result: 2.4 mIU/L (Optimal)</div>
+                    </div>
+                    <span class="urgency-badge urgency-low">COMPLETED</span>
+                  </div>
+                  <button class="btn btn-outline btn-sm btn-full" style="font-size:0.7rem; margin-top:0.75rem;" onclick="printVisitSummary()">📄 Download PDF Lab Report</button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Right Column: Medical History Timeline & AI Symptom Assistant -->
+            <div class="clinical-card">
+              <div class="card-title-row">
+                <h2>📋 Patient Medical Timeline & Health Profile</h2>
+                <div class="card-subtitle-text">Historical visit timeline, allergies, and active medications</div>
+              </div>
+
+              <!-- Health Profile Summary Chips -->
+              <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.5rem; margin-bottom:1.25rem;">
+                <div style="background:var(--bg-main); border:1px solid var(--border-color); padding:0.6rem; border-radius:6px; text-align:center;">
+                  <div style="font-size:0.68rem; color:var(--text-muted); text-transform:uppercase;">Blood Group</div>
+                  <strong style="font-size:0.9rem; color:var(--accent-teal);">O Positive</strong>
+                </div>
+                <div style="background:var(--bg-main); border:1px solid var(--border-color); padding:0.6rem; border-radius:6px; text-align:center;">
+                  <div style="font-size:0.68rem; color:var(--text-muted); text-transform:uppercase;">Allergies</div>
+                  <strong style="font-size:0.85rem; color:var(--status-coral);">Penicillin</strong>
+                </div>
+                <div style="background:var(--bg-main); border:1px solid var(--border-color); padding:0.6rem; border-radius:6px; text-align:center;">
+                  <div style="font-size:0.68rem; color:var(--text-muted); text-transform:uppercase;">Active Meds</div>
+                  <strong style="font-size:0.9rem; color:var(--status-green);">2 Active</strong>
+                </div>
+              </div>
+
+              <div class="section-divider-label">MEDICAL VISIT TIMELINE (2026)</div>
+              
+              <!-- Timeline Feed -->
+              <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                <div style="display:flex; gap:0.75rem; align-items:flex-start;">
+                  <div style="width:10px; height:10px; border-radius:50%; background:var(--accent-teal); margin-top:0.3rem; flex-shrink:0;"></div>
+                  <div style="flex:1; background:var(--bg-main); border:1px solid var(--border-color); padding:0.65rem 0.85rem; border-radius:6px;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight:600;">
+                      <span>Aug 24, 2026 — Dermatology Visit</span>
+                      <span style="color:var(--accent-teal);">Dr. Alex Rivera</span>
+                    </div>
+                    <div style="font-size:0.73rem; color:var(--text-muted); margin-top:0.2rem;">Skin consultation · Amoxicillin prescribed</div>
+                  </div>
+                </div>
+
+                <div style="display:flex; gap:0.75rem; align-items:flex-start;">
+                  <div style="width:10px; height:10px; border-radius:50%; background:var(--status-green); margin-top:0.3rem; flex-shrink:0;"></div>
+                  <div style="flex:1; background:var(--bg-main); border:1px solid var(--border-color); padding:0.65rem 0.85rem; border-radius:6px;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight:600;">
+                      <span>Aug 12, 2026 — Blood Diagnostic Panel</span>
+                      <span style="color:var(--status-green);">Lab Center</span>
+                    </div>
+                    <div style="font-size:0.73rem; color:var(--text-muted); margin-top:0.2rem;">Full CBC & Metabolic Panel · Clear</div>
+                  </div>
+                </div>
+
+                <div style="display:flex; gap:0.75rem; align-items:flex-start;">
+                  <div style="width:10px; height:10px; border-radius:50%; background:var(--text-muted); margin-top:0.3rem; flex-shrink:0;"></div>
+                  <div style="flex:1; background:var(--bg-main); border:1px solid var(--border-color); padding:0.65rem 0.85rem; border-radius:6px;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight:600;">
+                      <span>Jul 30, 2026 — General Physical Visit</span>
+                      <span style="color:var(--text-muted);">Dr. Sarah Jenkins</span>
+                    </div>
+                    <div style="font-size:0.73rem; color:var(--text-muted); margin-top:0.2rem;">Annual checkup & vitals assessment</div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
           </div>
         </section>
 
