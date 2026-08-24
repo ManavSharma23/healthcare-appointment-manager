@@ -198,6 +198,7 @@ async function releaseCurrentHold() {
   document.getElementById('activeHoldSection').classList.add('hidden');
   document.getElementById('bookingMessage').innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem; margin-top:0.5rem;">Slot hold released. Select any available slot to hold.</div>';
   loadDoctorSlots();
+  loadPatientAppointments();
 }
 
 async function holdSlot(slotStart) {
@@ -222,9 +223,10 @@ async function holdSlot(slotStart) {
     if (res.ok) {
       activeHoldId = data.appointment.id;
       activeHoldSlotStart = slotStart;
-      msgDiv.innerHTML = `<div style="color:var(--status-amber); font-weight:600; font-size:0.85rem; margin-top:0.75rem;">Slot Held for 5 Minutes. Click slot again or click 'Release / Cancel Hold' to undo.</div>`;
+      msgDiv.innerHTML = `<div style="color:var(--status-amber); font-weight:600; font-size:0.85rem; margin-top:0.75rem;">Slot Held for 5 Minutes. Enter symptoms below and click Confirm Booking.</div>`;
       document.getElementById('activeHoldSection').classList.remove('hidden');
       loadDoctorSlots();
+      loadPatientAppointments();
     } else {
       msgDiv.innerHTML = `<div style="color:var(--status-coral); font-weight:600; font-size:0.85rem; margin-top:0.75rem;">${data.error || 'Slot no longer available'}</div>`;
       loadDoctorSlots();
@@ -278,31 +280,32 @@ async function loadPatientAppointments() {
   const container = document.getElementById('patientAppointmentsList');
   container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Loading active appointments...</p>';
 
-  const res = await fetch(`${API_BASE}/doctors/appointments`, {
-    headers: { 'Authorization': `Bearer ${tokens.doctor}` }
+  // FIX: Fetch Patient's own appointments across ALL doctors using tokens.patient
+  const res = await fetch(`${API_BASE}/patients/my-appointments`, {
+    headers: { 'Authorization': `Bearer ${tokens.patient}` }
   });
   const data = await res.json();
   container.innerHTML = '';
 
   const rawAppointments = data.appointments || [];
-  const appointments = rawAppointments.filter(a => a.status === 'confirmed' || a.status === 'completed' || a.status === 'held');
 
-  if (appointments.length === 0) {
+  if (rawAppointments.length === 0) {
     container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">No active appointments found.</p>';
     return;
   }
 
-  appointments.forEach(appt => {
+  rawAppointments.forEach(appt => {
     const timeStr = new Date(appt.slot_start).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
     const card = document.createElement('div');
     card.className = 'clinical-feed-card';
     card.innerHTML = `
       <div class="flex-between">
         <div>
-          <strong style="font-size:0.95rem; color:var(--text-primary);">Doctor Visit</strong>
+          <strong style="font-size:0.95rem; color:var(--text-primary);">${appt.doctor_name}</strong>
+          <div style="font-size:0.8rem; color:var(--accent-teal); font-weight:500;">${appt.specialisation}</div>
           <div class="mono-code" style="margin-top:0.2rem;">${timeStr}</div>
         </div>
-        <span class="urgency-badge ${appt.status === 'confirmed' ? 'urgency-low' : 'urgency-medium'}">${appt.status.toUpperCase()}</span>
+        <span class="urgency-badge ${appt.status === 'confirmed' ? 'urgency-low' : appt.status === 'completed' ? 'urgency-low' : 'urgency-medium'}">${appt.status.toUpperCase()}</span>
       </div>
 
       ${appt.symptom_summary ? `
@@ -452,6 +455,7 @@ async function submitPostVisitNotes(appointmentId) {
     alert('Clinical notes submitted. Post-visit AI summary generated & medication reminders scheduled.');
     appendAuditLog(`Dr. Sarah Jenkins submitted visit notes for appointment #${appointmentId.substring(0, 8)}`);
     loadDoctorSchedule();
+    loadPatientAppointments();
   } else {
     const errData = await res.json();
     alert(`Error: ${errData.error || 'Failed to submit clinical notes'}`);

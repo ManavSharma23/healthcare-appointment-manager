@@ -235,3 +235,45 @@ export async function getAppointmentSummary(req: AuthenticatedRequest, res: Resp
     },
   });
 }
+
+export async function getPatientAppointments(req: AuthenticatedRequest, res: Response) {
+  const patientId = req.user!.userId;
+
+  const appointments = await prisma.appointment.findMany({
+    where: { patient_id: patientId },
+    include: {
+      doctor: { select: { id: true, name: true, doctor_profile: true } },
+      symptom_form: true,
+      visit_note: true,
+    },
+    orderBy: { slot_start: 'desc' },
+  });
+
+  const formatted = appointments.map((a) => ({
+    id: a.id,
+    doctor_id: a.doctor_id,
+    doctor_name: a.doctor.name,
+    specialisation: a.doctor.doctor_profile?.specialisation || 'General Medicine',
+    slot_start: a.slot_start,
+    slot_end: a.slot_end,
+    status: a.status,
+    expires_at: a.expires_at,
+    symptom_summary: a.symptom_form
+      ? {
+          symptoms: a.symptom_form.symptoms_text,
+          ai_summary: a.symptom_form.ai_summary ? JSON.parse(a.symptom_form.ai_summary) : null,
+          ai_status: a.symptom_form.ai_status,
+        }
+      : null,
+    visit_note: a.visit_note
+      ? {
+          doctor_notes: a.visit_note.doctor_notes,
+          prescription: a.visit_note.prescription ? JSON.parse(a.visit_note.prescription) : [],
+          ai_patient_summary: a.visit_note.ai_patient_summary,
+          ai_status: a.visit_note.ai_status,
+        }
+      : null,
+  }));
+
+  return res.json({ appointments: formatted });
+}
