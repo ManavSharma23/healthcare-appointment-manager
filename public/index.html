@@ -71,10 +71,22 @@
         <div class="sidebar-quick-stats">
           <div class="quick-stats-header">
             <span class="quick-stats-title">LIVE CLINICAL AGGREGATES</span>
-            <select id="sidebarStatFilter" class="quick-stats-select" onchange="updateSidebarStats(this.value)">
-              <option value="today" selected>Today</option>
-              <option value="week">This Week</option>
-            </select>
+            <div class="stat-filter-wrap">
+              <button id="sidebarStatFilterBtn" class="quick-stats-badge-btn" onclick="toggleSidebarStatDropdown(event)">
+                <span id="sideStatFilterLabel">Today</span>
+                <span style="font-size:0.6rem; opacity:0.8;">▼</span>
+              </button>
+              <div id="sidebarStatDropdown" class="stat-filter-popover hidden">
+                <div class="stat-filter-option active" data-value="today" onclick="selectSidebarStatFilter('today', 'Today'); event.stopPropagation();">
+                  <span>Today</span>
+                  <span class="check-mark">✓</span>
+                </div>
+                <div class="stat-filter-option" data-value="week" onclick="selectSidebarStatFilter('week', 'This Week'); event.stopPropagation();">
+                  <span>This Week</span>
+                  <span class="check-mark">✓</span>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="quick-stats-grid">
             <div class="quick-stat-item">

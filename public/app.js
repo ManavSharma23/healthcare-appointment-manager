@@ -1283,6 +1283,34 @@ function printVisitSummary() {
 }
 
 // ─── SIDEBAR QUICK STATS & PROFILE POPOVER HELPERS ─────────────────────────
+function toggleSidebarStatDropdown(e) {
+  e.stopPropagation();
+  const popover = document.getElementById('sidebarStatDropdown');
+  if (popover) {
+    popover.classList.toggle('hidden');
+  }
+}
+
+function selectSidebarStatFilter(mode, label) {
+  const popover = document.getElementById('sidebarStatDropdown');
+  const labelEl = document.getElementById('sideStatFilterLabel');
+
+  if (labelEl) labelEl.innerText = label;
+  if (popover) popover.classList.add('hidden');
+
+  // Update checkmarks and active states
+  const options = document.querySelectorAll('.stat-filter-option');
+  options.forEach(opt => {
+    if (opt.getAttribute('data-value') === mode) {
+      opt.classList.add('active');
+    } else {
+      opt.classList.remove('active');
+    }
+  });
+
+  updateSidebarStats(mode);
+}
+
 function updateSidebarStats(filterMode = 'today') {
   const apptsEl = document.getElementById('sideStatAppts');
   const leavesEl = document.getElementById('sideStatLeaves');
@@ -1324,6 +1352,10 @@ function toggleProfileDropdown(e) {
 
 // Dismiss popovers on outside click
 document.addEventListener('click', (e) => {
+  const statDropdown = document.getElementById('sidebarStatDropdown');
+  if (statDropdown && !statDropdown.classList.contains('hidden')) {
+    statDropdown.classList.add('hidden');
+  }
   const profileDropdown = document.getElementById('profileDropdown');
   if (profileDropdown && !profileDropdown.classList.contains('hidden')) {
     profileDropdown.classList.add('hidden');
