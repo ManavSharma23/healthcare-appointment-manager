@@ -60,7 +60,7 @@ export async function purgeExpiredHolds(req: Request, res: Response) {
 }
 
 export async function getAuditLogs(req: Request, res: Response) {
-  const { query, action, role, startDate, endDate, page = '1', limit = '15', exportFormat } = req.query;
+  const { query, action, role, startDate, endDate, sort = 'desc', page = '1', limit = '15', exportFormat } = req.query;
 
   const where: any = {};
   if (action && typeof action === 'string') {
@@ -83,11 +83,13 @@ export async function getAuditLogs(req: Request, res: Response) {
     ];
   }
 
+  const sortOrder = sort === 'asc' ? 'asc' : 'desc';
+
   // Handle CSV export for compliance reporting
   if (exportFormat === 'csv') {
     const allLogs = await prisma.auditLog.findMany({
       where,
-      orderBy: { created_at: 'desc' },
+      orderBy: { created_at: sortOrder },
     });
 
     const csvRows = [
@@ -98,7 +100,7 @@ export async function getAuditLogs(req: Request, res: Response) {
     ];
 
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="audit_log_export_${Date.now()}.csv"`);
+    res.setHeader('Content-Disposition', `attachment; filename="audit_log_export_${allLogs.length}_entries_${Date.now()}.csv"`);
     return res.status(200).send(csvRows.join('\n'));
   }
 
@@ -108,7 +110,7 @@ export async function getAuditLogs(req: Request, res: Response) {
   const total = await prisma.auditLog.count({ where });
   const logs = await prisma.auditLog.findMany({
     where,
-    orderBy: { created_at: 'desc' },
+    orderBy: { created_at: sortOrder },
     skip: (p - 1) * l,
     take: l,
   });

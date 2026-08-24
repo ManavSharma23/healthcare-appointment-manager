@@ -71,33 +71,33 @@ Return ONLY valid JSON matching:
   // Symptom-Aware Fallback Rule Engine for local offline mode
   const lower = symptoms.toLowerCase();
   
-  if (lower.includes('chest') || lower.includes('heart') || lower.includes('palpitations') || lower.includes('angina')) {
+  if (lower.includes('chest') || lower.includes('heart') || lower.includes('palpitations') || lower.includes('angina') || lower.includes('cardio')) {
     return {
       data: {
         urgency: 'High',
-        chief_complaint: 'Acute Substernal Discomfort & Potential Cardiac Pressure',
+        chief_complaint: 'Acute Substernal Pressure & Potential Cardiac Disturbance',
         questions: [
-          'Does the chest discomfort radiate to your shoulder, arm, neck, or jaw?',
-          'Are you experiencing accompanying shortness of breath, dizziness, or cold sweating?',
-          'Does the discomfort intensify during physical exertion or deep inspiration?'
+          'Does the chest discomfort radiate to your left arm, neck, or jaw?',
+          'Are you experiencing accompanying shortness of breath, dizziness, or cold diaphoresis?',
+          'Does physical exertion or deep breathing worsen the pain?'
         ]
       },
       status: 'failed'
     };
-  } else if (lower.includes('stomach') || lower.includes('abdominal') || lower.includes('belly') || lower.includes('nausea') || lower.includes('vomit')) {
+  } else if (lower.includes('stomach') || lower.includes('abdominal') || lower.includes('belly') || lower.includes('nausea') || lower.includes('vomit') || lower.includes('gut')) {
     return {
       data: {
         urgency: 'Medium',
-        chief_complaint: 'Gastrointestinal Distress & Abdominal Discomfort',
+        chief_complaint: 'Gastrointestinal Distress & Epigastric Abdominal Pain',
         questions: [
-          'Is the abdominal discomfort sharp, cramping, or a dull persistent ache?',
+          'Is the abdominal pain sharp, cramping, or a dull persistent ache?',
           'Does eating meals or drinking fluids aggravate or alleviate the symptoms?',
           'Have you experienced any fever, nausea, vomiting, or altered bowel habits?'
         ]
       },
       status: 'failed'
     };
-  } else if (lower.includes('head') || lower.includes('migraine') || lower.includes('dizzy') || lower.includes('vertigo')) {
+  } else if (lower.includes('head') || lower.includes('migraine') || lower.includes('dizzy') || lower.includes('vertigo') || lower.includes('brain')) {
     return {
       data: {
         urgency: 'Medium',
@@ -110,7 +110,7 @@ Return ONLY valid JSON matching:
       },
       status: 'failed'
     };
-  } else if (lower.includes('skin') || lower.includes('rash') || lower.includes('itch') || lower.includes('lesion')) {
+  } else if (lower.includes('skin') || lower.includes('rash') || lower.includes('itch') || lower.includes('lesion') || lower.includes('derma')) {
     return {
       data: {
         urgency: 'Low',
@@ -123,7 +123,7 @@ Return ONLY valid JSON matching:
       },
       status: 'failed'
     };
-  } else if (lower.includes('joint') || lower.includes('knee') || lower.includes('back') || lower.includes('bone') || lower.includes('muscle')) {
+  } else if (lower.includes('joint') || lower.includes('knee') || lower.includes('back') || lower.includes('bone') || lower.includes('muscle') || lower.includes('ortho')) {
     return {
       data: {
         urgency: 'Low',
@@ -138,15 +138,16 @@ Return ONLY valid JSON matching:
     };
   }
 
-  // Default fallback for general symptoms
+  // General Dynamic Fallback for custom symptom descriptions
+  const cleanSym = symptoms.trim().slice(0, 40);
   return {
     data: {
       urgency: 'Medium',
-      chief_complaint: `General Symptom Presentation: ${symptoms.slice(0, 75)}`,
+      chief_complaint: `Intake Assessment: ${cleanSym}`,
       questions: [
-        `What specific onset triggers or timing patterns accompany your ${symptoms.slice(0, 30)}?`,
-        'Have you taken any over-the-counter medications or home remedies for relief?',
-        'Are you experiencing any accompanying fever, fatigue, or general malaise?'
+        `What specific onset triggers or timing patterns accompany your "${cleanSym}"?`,
+        `Have you taken any specific over-the-counter medications or remedies for "${cleanSym}"?`,
+        'Are you experiencing any accompanying fever, chills, fatigue, or localized swelling?'
       ]
     },
     status: 'failed'
@@ -191,14 +192,14 @@ Return ONLY valid JSON matching this structure:
 
   return {
     data: {
-      patient_summary: `Your doctor reviewed your condition: ${notes}. Please follow the instructions below and rest.`,
+      patient_summary: `Clinical Visit Summary: The doctor evaluated your symptoms ("${notes}"). Please follow the prescribed care instructions below and contact the clinic if your condition changes.`,
       medication_schedule: prescriptionText ? [
         { medicine: 'Prescribed Medication', dosage: 'As directed', frequency: 'Daily', duration: '5-7 days' }
       ] : [],
       follow_up_steps: [
-        'Take medications as prescribed with meals.',
-        'Schedule a follow-up appointment if symptoms persist after 5 days.',
-        'Seek immediate emergency care if you experience severe worsening symptoms.'
+        'Take all medications exactly as prescribed with meals.',
+        'Schedule a follow-up consultation if symptoms persist after 5 days.',
+        'Seek emergency clinical care if you experience severe worsening symptoms.'
       ]
     },
     status: 'failed'

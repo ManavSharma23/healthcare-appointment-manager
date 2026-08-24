@@ -1100,12 +1100,14 @@ async function loadSuperAdminAuditLogs(targetPage = 1) {
   currentAuditPage = targetPage;
   const query = document.getElementById('auditSearchQuery')?.value || '';
   const role = document.getElementById('auditRoleFilter')?.value || '';
+  const sort = document.getElementById('auditSortOrder')?.value || 'desc';
   const startDate = document.getElementById('auditStartDate')?.value || '';
   const endDate = document.getElementById('auditEndDate')?.value || '';
 
   const params = new URLSearchParams();
   if (query) params.set('query', query);
   if (role) params.set('role', role);
+  if (sort) params.set('sort', sort);
   if (startDate) params.set('startDate', startDate);
   if (endDate) params.set('endDate', endDate);
   params.set('page', String(currentAuditPage));
@@ -1127,7 +1129,7 @@ async function loadSuperAdminAuditLogs(targetPage = 1) {
   // Update pagination info & button states
   const infoEl = document.getElementById('auditPaginationInfo');
   if (infoEl) {
-    infoEl.innerText = `Page ${pagination.page} of ${pagination.totalPages} (${pagination.total} total entries)`;
+    infoEl.innerText = `Page ${pagination.page} of ${pagination.totalPages} (${pagination.total} total filtered entries)`;
   }
 
   const prevBtn = document.getElementById('auditPrevBtn');
@@ -1136,7 +1138,13 @@ async function loadSuperAdminAuditLogs(targetPage = 1) {
   if (nextBtn) nextBtn.disabled = (currentAuditPage >= totalAuditPages);
 
   if (logs.length === 0) {
-    container.innerHTML = '<div class="audit-item"><span class="mono-code">[System]</span> No audit records match the current filter criteria.</div>';
+    container.innerHTML = `
+      <div class="empty-state-card" style="padding:1.5rem;">
+        <div class="empty-state-icon">🔍</div>
+        <div style="font-size:0.85rem; font-weight:600;">No audit records found</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);">No entries match the current filter or date range criteria.</div>
+      </div>
+    `;
     return;
   }
 
@@ -1144,7 +1152,21 @@ async function loadSuperAdminAuditLogs(targetPage = 1) {
     const time = new Date(log.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'medium' });
     const div = document.createElement('div');
     div.className = 'audit-item';
-    div.innerHTML = `<span class="mono-code">[${time}]</span> <strong>${log.action}</strong> — ${log.details || ''} <span style="color:var(--text-muted); font-size:0.75rem;">(${log.actor_role}: ${log.actor_name || 'System'})</span>`;
+    
+    // Determine severity badge styling based on event action
+    let badgeClass = 'audit-badge-info';
+    if (log.action.includes('DEACTIVATED') || log.action.includes('PURGED') || log.action.includes('DELETE')) {
+      badgeClass = 'audit-badge-destructive';
+    } else if (log.action.includes('SUPERADMIN') || log.action.includes('REACTIVATED') || log.action.includes('CONFIG')) {
+      badgeClass = 'audit-badge-warning';
+    }
+
+    div.innerHTML = `
+      <span class="mono-code" style="font-size:0.75rem;">[${time}]</span>
+      <span class="audit-badge ${badgeClass}">${log.action}</span>
+      <span style="flex:1;">${log.details || ''}</span>
+      <span style="color:var(--text-muted); font-size:0.75rem; font-family:var(--font-mono);">(${log.actor_role}: ${log.actor_name || 'System'})</span>
+    `;
     container.appendChild(div);
   });
 }
@@ -1165,17 +1187,67 @@ function clearAuditDateFilters() {
 function exportAuditLogsCSV() {
   const query = document.getElementById('auditSearchQuery')?.value || '';
   const role = document.getElementById('auditRoleFilter')?.value || '';
+  const sort = document.getElementById('auditSortOrder')?.value || 'desc';
   const startDate = document.getElementById('auditStartDate')?.value || '';
   const endDate = document.getElementById('auditEndDate')?.value || '';
 
   const params = new URLSearchParams();
   if (query) params.set('query', query);
   if (role) params.set('role', role);
+  if (sort) params.set('sort', sort);
   if (startDate) params.set('startDate', startDate);
   if (endDate) params.set('endDate', endDate);
   params.set('exportFormat', 'csv');
 
+  showToast('Generating CSV report with currently applied filters...', 'info');
   window.open(`${API_BASE}/superadmin/audit-logs?${params.toString()}`, '_blank');
+}
+
+// ─── GLOBAL CROSS-VIEW SEARCH ───────────────────────────────────────────────
+async function handleGlobalSearch(query) {
+  const dropdown = document.getElementById('globalSearchResults');
+  if (!dropdown) return;
+
+  if (!query || query.trim().length < 2) {
+    dropdown.classList.add('hidden');
+    dropdown.innerHTML = '';
+    return;
+  }
+
+  const q = query.trim().toLowerCase();
+  
+  // Search doctors & patients
+  const res = await fetch(`${API_BASE}/patients/doctors`, {
+    headers: { 'Authorization': `Bearer ${tokens.patient}` }
+  });
+  const data = await res.json();
+  const doctors = data.doctors || [];
+
+  const matchedDocs = doctors.filter(d => d.name.toLowerCase().includes(q) || d.specialisation.toLowerCase().includes(q));
+
+  dropdown.innerHTML = '';
+  dropdown.classList.remove('hidden');
+
+  if (matchedDocs.length === 0) {
+    dropdown.innerHTML = `<div style="padding:0.5rem 0.75rem; font-size:0.8rem; color:var(--text-muted);">No matching clinical records found</div>`;
+    return;
+  }
+
+  matchedDocs.forEach(doc => {
+    const item = document.createElement('div');
+    item.style.padding = '0.5rem 0.75rem';
+    item.style.borderBottom = '1px solid var(--border-color)';
+    item.style.cursor = 'pointer';
+    item.style.fontSize = '0.8rem';
+    item.innerHTML = `<strong>${doc.name}</strong> <span style="color:var(--accent-teal);">(${doc.specialisation})</span>`;
+    item.onclick = () => {
+      switchDashboard('patient');
+      selectDoctor(doc.id, doc.name);
+      dropdown.classList.add('hidden');
+      document.getElementById('globalSearchInput').value = '';
+    };
+    dropdown.appendChild(item);
+  });
 }
 
 async function handleSaveSystemConfig(e) {

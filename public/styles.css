@@ -782,13 +782,44 @@ textarea {
 }
 
 .audit-item {
-  padding-bottom: 0.35rem;
+  padding: 0.4rem 0.5rem;
   border-bottom: 1px dashed var(--border-color);
   color: var(--text-body);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .audit-item:last-child {
   border-bottom: none;
+}
+
+.audit-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.audit-badge-destructive {
+  background: var(--status-coral-bg);
+  color: var(--status-coral);
+  border: 1px solid var(--status-coral);
+}
+
+.audit-badge-warning {
+  background: var(--status-amber-bg);
+  color: var(--status-amber);
+  border: 1px solid var(--status-amber);
+}
+
+.audit-badge-info {
+  background: var(--status-green-bg);
+  color: var(--status-green);
+  border: 1px solid var(--status-green);
 }
 
 /* Confirmation Modal Backdrop & Card */
@@ -1086,6 +1117,20 @@ body.super-admin-mode .brand-title span {
   background: var(--status-coral-bg);
   color: var(--status-coral);
   border: 1px solid var(--status-coral);
+}
+
+.global-search-dropdown {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-modal);
+  z-index: 1000;
+  max-height: 250px;
+  overflow-y: auto;
 }
 
 /* ─── PRINT / PDF EXPORT STYLES ─────────────────────────────────────────── */
