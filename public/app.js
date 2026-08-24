@@ -136,10 +136,97 @@ function switchDashboard(role) {
   } else if (role === 'admin') {
     loadFailedNotifications();
     loadAdminDoctorsList();
+  } else if (role === 'analytics') {
+    loadInsightsAnalytics();
   } else if (role === 'superadmin') {
     loadSuperAdminAuditLogs();
     loadAdminDoctorsList();
   }
+}
+
+async function loadInsightsAnalytics() {
+  try {
+    const res = await fetch(`${API_BASE}/patients/my-appointments`, {
+      headers: { 'Authorization': `Bearer ${tokens.patient || tokens.admin}` }
+    });
+    const data = await res.json();
+    const appts = data.appointments || [];
+
+    // Calculate metrics
+    const total = appts.length;
+    const completed = appts.filter(a => a.status === 'completed').length;
+    const cancelled = appts.filter(a => a.status === 'cancelled').length;
+    const cancelRate = total > 0 ? ((cancelled / total) * 100).toFixed(1) : '0.0';
+
+    const highUrgency = appts.filter(a => a.symptom_summary?.ai_summary?.urgency === 'High').length;
+    const medUrgency  = appts.filter(a => a.symptom_summary?.ai_summary?.urgency === 'Medium').length;
+    const lowUrgency  = appts.filter(a => a.symptom_summary?.ai_summary?.urgency === 'Low').length;
+
+    // Update KPI UI
+    const elTotal = document.getElementById('kpiTotalScheduled');
+    const elComp  = document.getElementById('kpiCompleted');
+    const elRate  = document.getElementById('kpiCancelRate');
+    
+    if (elTotal) elTotal.innerText = total;
+    if (elComp)  elComp.innerText  = completed;
+    if (elRate)  elRate.innerText  = `${cancelRate}%`;
+
+    // Utilization
+    const utilPct = total > 0 ? ((completed / total) * 100).toFixed(1) : '0.0';
+    const bar = document.getElementById('utilizationProgressBar');
+    const txt = document.getElementById('utilizationText');
+    const pct = document.getElementById('utilizationPct');
+    if (bar) bar.style.width = `${utilPct}%`;
+    if (txt) txt.innerText = `${completed} / ${total} slots completed`;
+    if (pct) pct.innerText = `${utilPct}%`;
+
+    // Urgency counters
+    const hCount = document.getElementById('urgencyHighCount');
+    const mCount = document.getElementById('urgencyMedCount');
+    const lCount = document.getElementById('urgencyLowCount');
+    if (hCount) hCount.innerText = highUrgency;
+    if (mCount) mCount.innerText = medUrgency;
+    if (lCount) lCount.innerText = lowUrgency;
+
+    const hMeta = document.getElementById('urgencyHighMeta');
+    const mMeta = document.getElementById('urgencyMedMeta');
+    const lMeta = document.getElementById('urgencyLowMeta');
+    if (hMeta) hMeta.innerText = `${total > 0 ? Math.round((highUrgency/total)*100) : 0}% (${highUrgency} cases)`;
+    if (mMeta) mMeta.innerText = `${total > 0 ? Math.round((medUrgency/total)*100) : 0}% (${medUrgency} cases)`;
+    if (lMeta) lMeta.innerText = `${total > 0 ? Math.round((lowUrgency/total)*100) : 0}% (${lowUrgency} cases)`;
+
+    // Specialization Demand Breakdown
+    const specMap = {};
+    appts.forEach(a => {
+      const spec = a.specialisation || 'General Medicine';
+      specMap[spec] = (specMap[spec] || 0) + 1;
+    });
+
+    const specContainer = document.getElementById('analyticsSpecContainer');
+    if (specContainer) {
+      const entries = Object.entries(specMap);
+      if (entries.length === 0) {
+        specContainer.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted);">No departmental bookings recorded yet.</div>';
+      } else {
+        const colors = ['var(--accent-teal)', 'var(--status-amber)', 'var(--status-green)', 'var(--status-coral)'];
+        specContainer.innerHTML = entries.map(([dept, count], idx) => {
+          const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+          const color = colors[idx % colors.length];
+          return `
+            <div class="analytics-spec-row" style="margin-bottom:0.75rem;">
+              <div class="analytics-spec-header" style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:0.2rem;">
+                <strong style="color:var(--text-primary);">${dept}</strong>
+                <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted);">${count} visits (${percentage}%)</span>
+              </div>
+              <div class="analytics-spec-bar-track" style="width:100%; height:8px; background:var(--bg-main); border-radius:4px; overflow:hidden;">
+                <div class="analytics-spec-bar-fill" style="width:${percentage}%; height:100%; background:${color}; border-radius:4px;"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+  } catch (err) {}
 }
 
 function switchLabTab(tab) {
