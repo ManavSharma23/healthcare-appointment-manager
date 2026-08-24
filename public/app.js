@@ -130,6 +130,7 @@ function switchDashboard(role) {
     loadDoctors();
     loadPatientAppointments();
   } else if (role === 'doctor') {
+    populateDoctorWorkstationDropdown();
     loadDoctorSchedule();
   } else if (role === 'admin') {
     loadFailedNotifications();
@@ -572,6 +573,25 @@ function showToast(message, type = 'info') {
 }
 
 // DOCTOR WORKSTATION
+async function populateDoctorWorkstationDropdown() {
+  const select = document.getElementById('docWorkstationSelect');
+  if (!select) return;
+  try {
+    const res = await fetch(`${API_BASE}/patients/doctors`);
+    const data = await res.json();
+    const doctors = data.doctors || [];
+    if (doctors.length > 0) {
+      const currentVal = select.value;
+      select.innerHTML = doctors.map(d => 
+        `<option value="${d.email}">${d.name} (${d.specialisation})</option>`
+      ).join('');
+      if (currentVal && doctors.some(d => d.email === currentVal)) {
+        select.value = currentVal;
+      }
+    }
+  } catch (err) {}
+}
+
 async function switchDoctorWorkstationRoster(email) {
   try {
     const res = await fetch(`${API_BASE}/auth/login`, {
@@ -583,12 +603,10 @@ async function switchDoctorWorkstationRoster(email) {
     if (data.accessToken) {
       tokens.doctor = data.accessToken;
       
-      const docNames = {
-        'doctor@clinic.com': 'Dr. Sarah Jenkins',
-        'alex.rivera@clinic.com': 'Dr. Alex Rivera',
-        'info.agamarora@gmail.com': 'Dr. Agam Arora'
-      };
-      const name = docNames[email] || 'Doctor Workstation';
+      const select = document.getElementById('docWorkstationSelect');
+      const selectedOption = select ? select.options[select.selectedIndex] : null;
+      const name = selectedOption ? selectedOption.text.split('(')[0].trim() : 'Doctor Workstation';
+
       document.getElementById('currentUserName').innerText = name;
       document.getElementById('currentEmail').innerText = email;
       
