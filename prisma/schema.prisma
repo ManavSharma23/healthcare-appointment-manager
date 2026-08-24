@@ -129,3 +129,25 @@ model CalendarEvent {
   doctor_synced  Boolean     @default(false)
   created_at     DateTime    @default(now())
 }
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actor_role String   // admin | superadmin | doctor | patient | system
+  actor_name String?
+  action     String   // e.g. DOCTOR_DEACTIVATED, DOCTOR_HARD_DELETED, EXPIRED_HOLDS_PURGED, SUPERADMIN_UNLOCKED
+  details    String   // JSON or descriptive text
+  created_at DateTime @default(now())
+}
+
+model WaitlistEntry {
+  id         String   @id @default(uuid())
+  patient_id String
+  doctor_id  String
+  preferred_date String // YYYY-MM-DD
+  status     String   @default("waiting") // waiting | notified | claimed | expired
+  created_at DateTime @default(now())
+
+  @@index([doctor_id, preferred_date])
+}
+
+
