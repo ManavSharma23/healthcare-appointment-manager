@@ -70,13 +70,14 @@ function switchAccountRole(role) {
 function switchDashboard(role) {
   activeRole = role;
 
-  document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.sidebar-nav .nav-item').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.dashboard-panel').forEach(sec => sec.classList.remove('active'));
 
   const targetId = role === 'superadmin' ? 'superAdminDashboard' : `${role}Dashboard`;
   const panel = document.getElementById(targetId);
-  if (!panel) return;
-  panel.classList.add('active');
+  if (panel) {
+    panel.classList.add('active');
+  }
 
   // Highlight active nav item reliably
   document.querySelectorAll('.sidebar-nav .nav-item').forEach(btn => {

@@ -584,6 +584,210 @@
           </div>
         </section>
 
+        <!-- INSIGHTS & ANALYTICS DASHBOARD -->
+        <section id="analyticsDashboard" class="dashboard-panel">
+          <!-- Row 1: Volume Trend + Specialization Demand -->
+          <div class="grid-2col" style="margin-bottom:1.75rem;">
+            <!-- Chart Card 1: 7-Day Appointment Trend Bar Chart -->
+            <div class="clinical-card">
+              <div class="card-title-row flex-between">
+                <div>
+                  <h2>7-Day Appointment Volume</h2>
+                  <div class="card-subtitle-text">Daily patient intake trends across all specializations</div>
+                </div>
+                <span class="sync-chip">Live Metrics</span>
+              </div>
+              <div class="analytics-bar-chart" id="analyticsVolumeChart">
+                <div class="analytics-bar-col">
+                  <div class="analytics-bar-value">3</div>
+                  <div class="analytics-bar" style="height:43%;" title="Mon: 3 Appointments"></div>
+                  <div class="analytics-bar-label">Mon</div>
+                </div>
+                <div class="analytics-bar-col">
+                  <div class="analytics-bar-value">5</div>
+                  <div class="analytics-bar" style="height:71%;" title="Tue: 5 Appointments"></div>
+                  <div class="analytics-bar-label">Tue</div>
+                </div>
+                <div class="analytics-bar-col">
+                  <div class="analytics-bar-value">1</div>
+                  <div class="analytics-bar" style="height:14%;" title="Wed: 1 Appointment"></div>
+                  <div class="analytics-bar-label">Wed</div>
+                </div>
+                <div class="analytics-bar-col analytics-bar-today">
+                  <div class="analytics-bar-value">7</div>
+                  <div class="analytics-bar analytics-bar-peak" style="height:100%;" title="Thu: 7 Appointments (TODAY — Peak)"></div>
+                  <div class="analytics-bar-label">Thu ★</div>
+                </div>
+                <div class="analytics-bar-col">
+                  <div class="analytics-bar-value">4</div>
+                  <div class="analytics-bar" style="height:57%;" title="Fri: 4 Appointments"></div>
+                  <div class="analytics-bar-label">Fri</div>
+                </div>
+                <div class="analytics-bar-col">
+                  <div class="analytics-bar-value">0</div>
+                  <div class="analytics-bar analytics-bar-closed" style="height:4%;" title="Sat: Closed"></div>
+                  <div class="analytics-bar-label">Sat</div>
+                </div>
+                <div class="analytics-bar-col">
+                  <div class="analytics-bar-value">0</div>
+                  <div class="analytics-bar analytics-bar-closed" style="height:4%;" title="Sun: Closed"></div>
+                  <div class="analytics-bar-label">Sun</div>
+                </div>
+              </div>
+              <div style="text-align:center; margin-top:0.75rem; font-size:0.75rem; color:var(--text-muted);">
+                Total This Week: <strong style="color:var(--accent-teal);">20 appointments</strong> · Avg: <strong>2.9/day</strong>
+              </div>
+            </div>
+
+            <!-- Chart Card 2: Specialization Load Breakdown -->
+            <div class="clinical-card">
+              <div class="card-title-row">
+                <h2>Clinical Specialization Demand</h2>
+                <div class="card-subtitle-text">Patient booking distribution per department</div>
+              </div>
+              <div class="analytics-spec-list">
+                <div class="analytics-spec-row">
+                  <div class="analytics-spec-header">
+                    <span class="analytics-spec-dot" style="background:var(--accent-teal);"></span>
+                    <strong>Cardiology</strong>
+                    <span class="analytics-spec-doctor">Dr. Sarah Jenkins</span>
+                  </div>
+                  <div class="analytics-spec-bar-track">
+                    <div class="analytics-spec-bar-fill" style="width:50%; background:var(--accent-teal);"></div>
+                  </div>
+                  <div class="analytics-spec-meta">
+                    <span class="mono-code">5 visits</span>
+                    <span class="analytics-spec-pct">50%</span>
+                  </div>
+                </div>
+                <div class="analytics-spec-row">
+                  <div class="analytics-spec-header">
+                    <span class="analytics-spec-dot" style="background:var(--status-amber);"></span>
+                    <strong>Dermatology</strong>
+                    <span class="analytics-spec-doctor">Dr. Alex Kim</span>
+                  </div>
+                  <div class="analytics-spec-bar-track">
+                    <div class="analytics-spec-bar-fill" style="width:30%; background:var(--status-amber);"></div>
+                  </div>
+                  <div class="analytics-spec-meta">
+                    <span class="mono-code">3 visits</span>
+                    <span class="analytics-spec-pct">30%</span>
+                  </div>
+                </div>
+                <div class="analytics-spec-row">
+                  <div class="analytics-spec-header">
+                    <span class="analytics-spec-dot" style="background:var(--status-green);"></span>
+                    <strong>Orthopedics</strong>
+                    <span class="analytics-spec-doctor">Dr. Agam Patel</span>
+                  </div>
+                  <div class="analytics-spec-bar-track">
+                    <div class="analytics-spec-bar-fill" style="width:20%; background:var(--status-green);"></div>
+                  </div>
+                  <div class="analytics-spec-meta">
+                    <span class="mono-code">2 visits</span>
+                    <span class="analytics-spec-pct">20%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 2: No-Show Metrics + Triage Urgency -->
+          <div class="grid-2col">
+            <!-- Cancellation & Attendance Metrics -->
+            <div class="clinical-card">
+              <div class="card-title-row">
+                <h2>No-Show & Cancellation Intelligence</h2>
+                <div class="card-subtitle-text">Slot utilization and backfill recovery efficiency</div>
+              </div>
+              <div class="analytics-kpi-grid">
+                <div class="analytics-kpi-card">
+                  <div class="analytics-kpi-num">14</div>
+                  <div class="analytics-kpi-label">Total Scheduled</div>
+                </div>
+                <div class="analytics-kpi-card">
+                  <div class="analytics-kpi-num" style="color:var(--status-green);">10</div>
+                  <div class="analytics-kpi-label">Completed</div>
+                </div>
+                <div class="analytics-kpi-card">
+                  <div class="analytics-kpi-num" style="color:var(--status-amber);">7.1%</div>
+                  <div class="analytics-kpi-label">Cancellation Rate</div>
+                </div>
+                <div class="analytics-kpi-card">
+                  <div class="analytics-kpi-num" style="color:var(--accent-teal);">100%</div>
+                  <div class="analytics-kpi-label">Waitlist Backfill</div>
+                </div>
+              </div>
+              <div style="margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--border-color);">
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem; font-weight:600;">SLOT UTILIZATION THIS WEEK</div>
+                <div style="width:100%; height:10px; background:var(--bg-main); border-radius:5px; overflow:hidden;">
+                  <div style="width:71.4%; height:100%; background:linear-gradient(90deg, var(--accent-teal), #0d9488); border-radius:5px;"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted); margin-top:0.3rem;">
+                  <span>10 / 14 slots utilized</span>
+                  <span style="color:var(--accent-teal); font-weight:600;">71.4%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Triage Urgency Distribution -->
+            <div class="clinical-card">
+              <div class="card-title-row">
+                <h2>Pre-Visit Triage Urgency Spread</h2>
+                <div class="card-subtitle-text">Structured LLM triage breakdown across incoming queue</div>
+              </div>
+              <div class="analytics-urgency-grid">
+                <div class="analytics-urgency-card urgency-high">
+                  <div class="analytics-urgency-ring">
+                    <svg width="60" height="60" viewBox="0 0 36 36">
+                      <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      <path class="ring-stroke" style="stroke:var(--status-coral);" stroke-dasharray="10, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <span class="analytics-urgency-num" style="color:var(--status-coral);">1</span>
+                  </div>
+                  <div class="analytics-urgency-label">High Urgency</div>
+                  <div class="analytics-urgency-pct">10%</div>
+                </div>
+                <div class="analytics-urgency-card urgency-med">
+                  <div class="analytics-urgency-ring">
+                    <svg width="60" height="60" viewBox="0 0 36 36">
+                      <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      <path class="ring-stroke" style="stroke:var(--status-amber);" stroke-dasharray="20, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <span class="analytics-urgency-num" style="color:var(--status-amber);">2</span>
+                  </div>
+                  <div class="analytics-urgency-label">Medium Urgency</div>
+                  <div class="analytics-urgency-pct">20%</div>
+                </div>
+                <div class="analytics-urgency-card urgency-low">
+                  <div class="analytics-urgency-ring">
+                    <svg width="60" height="60" viewBox="0 0 36 36">
+                      <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      <path class="ring-stroke" style="stroke:var(--status-green);" stroke-dasharray="70, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <span class="analytics-urgency-num" style="color:var(--status-green);">7</span>
+                  </div>
+                  <div class="analytics-urgency-label">Low Urgency</div>
+                  <div class="analytics-urgency-pct">70%</div>
+                </div>
+              </div>
+              <div style="margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--border-color);">
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem; font-weight:600;">AGGREGATE TRIAGE SEVERITY</div>
+                <div style="width:100%; height:10px; display:flex; border-radius:5px; overflow:hidden;">
+                  <div style="width:10%; background:var(--status-coral);"></div>
+                  <div style="width:20%; background:var(--status-amber);"></div>
+                  <div style="width:70%; background:var(--status-green);"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.65rem; color:var(--text-muted); margin-top:0.3rem;">
+                  <span>■ High (10%)</span>
+                  <span>■ Medium (20%)</span>
+                  <span>■ Low (70%)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </div>
     </div>
   </div>

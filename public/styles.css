@@ -476,6 +476,206 @@ body {
   box-shadow: 0 0 6px rgba(27, 107, 107, 0.6);
 }
 
+/* ========================== */
+/* INSIGHTS & ANALYTICS PAGE  */
+/* ========================== */
+
+/* --- Bar Chart --- */
+.analytics-bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  height: 200px;
+  padding: 1rem 0.5rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.analytics-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+  gap: 0.3rem;
+}
+
+.analytics-bar-value {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.analytics-bar {
+  width: 100%;
+  background: var(--accent-teal);
+  border-radius: 4px 4px 0 0;
+  min-height: 4px;
+  transition: height 0.4s ease;
+}
+
+.analytics-bar-peak {
+  background: linear-gradient(180deg, #14b8a6, var(--accent-teal));
+  box-shadow: 0 0 10px rgba(20, 184, 166, 0.4);
+}
+
+.analytics-bar-closed {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.analytics-bar-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.analytics-bar-today .analytics-bar-label {
+  color: var(--accent-teal);
+  font-weight: 700;
+}
+
+.analytics-bar-today .analytics-bar-value {
+  color: var(--accent-teal);
+}
+
+/* --- Specialization Demand --- */
+.analytics-spec-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.analytics-spec-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.analytics-spec-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.analytics-spec-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.analytics-spec-doctor {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.analytics-spec-bar-track {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-main);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.analytics-spec-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.analytics-spec-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+}
+
+.analytics-spec-pct {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* --- KPI Cards Grid --- */
+.analytics-kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.analytics-kpi-card {
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.analytics-kpi-num {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.analytics-kpi-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+/* --- Urgency Ring Cards --- */
+.analytics-urgency-grid {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-top: 1.25rem;
+  padding: 0.5rem 0;
+}
+
+.analytics-urgency-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.analytics-urgency-ring {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.analytics-urgency-ring svg {
+  transform: rotate(-90deg);
+}
+
+.analytics-urgency-num {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.analytics-urgency-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.analytics-urgency-pct {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
 .quick-stat-item .stat-num {
   font-family: var(--font-mono);
   font-size: 1.05rem;
