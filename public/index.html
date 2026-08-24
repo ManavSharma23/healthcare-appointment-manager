@@ -391,31 +391,6 @@
         <!-- ADMIN CONSOLE -->
         <section id="adminDashboard" class="dashboard-panel">
           <div class="grid-2col">
-            <div class="clinical-card" style="grid-column: 1 / -1; margin-bottom:0.5rem;">
-              <div class="card-title-row">
-                <h2>Clinic Governance & Access Controls</h2>
-                <div class="card-subtitle-text">Operational safeguards, role boundaries, and audit coverage for the scheduling platform</div>
-              </div>
-              <div class="workflow-status-grid" style="margin-top:0.75rem;">
-                <div class="workflow-state complete">
-                  <span class="workflow-step">Role-based access</span>
-                  <small>Patient, doctor, and admin boundaries enforced</small>
-                </div>
-                <div class="workflow-state complete">
-                  <span class="workflow-step">Audit trail</span>
-                  <small>Recent administrative changes are logged</small>
-                </div>
-                <div class="workflow-state active">
-                  <span class="workflow-step">Hold protection</span>
-                  <small>Transactional hold prevents double booking</small>
-                </div>
-                <div class="workflow-state pending">
-                  <span class="workflow-step">Compliance note</span>
-                  <small>Demo data only; no live clinical identifiers</small>
-                </div>
-              </div>
-            </div>
-
             <!-- Left Column: Create Doctor & Schedule Leave -->
             <div class="clinical-card">
               <div class="card-title-row">
@@ -814,12 +789,31 @@
 
             <!-- Chart Card 2: Specialization Load Breakdown -->
             <div class="clinical-card">
-              <div class="card-title-row">
-                <h2>Clinical Specialization Demand</h2>
-                <div class="card-subtitle-text">Patient booking distribution per department</div>
+              <div class="card-title-row flex-between" style="align-items:flex-start; gap:0.75rem;">
+                <div>
+                  <h2 id="analyticsDemandTitle">Clinical Specialization Demand</h2>
+                  <div class="card-subtitle-text" id="analyticsDemandSubtitle">Patient booking distribution per department</div>
+                </div>
+                <div class="analytics-view-tools">
+                  <div class="analytics-scope-toggle">
+                    <button class="toggle-pill active" data-analytics-mode="combined">Combined</button>
+                    <button class="toggle-pill" data-analytics-mode="doctor">Doctor</button>
+                  </div>
+                  <select id="analyticsDoctorSelect" class="analytics-doctor-select" aria-label="Select doctor analytics">
+                    <option value="all">All doctors</option>
+                  </select>
+                </div>
               </div>
-              <div class="analytics-spec-list" id="analyticsSpecContainer">
-                <div style="font-size:0.8rem; color:var(--text-muted);">Calculating live department demand...</div>
+              <div class="analytics-demand-layout">
+                <div class="analytics-spec-list" id="analyticsSpecContainer">
+                  <div style="font-size:0.8rem; color:var(--text-muted);">Calculating live department demand...</div>
+                </div>
+                <div class="analytics-pie-panel">
+                  <div class="analytics-pie" id="analyticsDistributionPie">
+                    <div class="analytics-pie-center" id="analyticsPieCenter">0</div>
+                  </div>
+                  <div class="analytics-pie-legend" id="analyticsPieLegend"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -924,6 +918,53 @@
                   <span style="color:var(--status-amber); font-weight:600;">■ Medium (2)</span>
                   <span style="color:var(--status-green); font-weight:600;">■ Low (7)</span>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid-2col analytics-bottom-row">
+            <div class="clinical-card">
+              <div class="card-title-row flex-between">
+                <div>
+                  <h2>Clinic Live Operations</h2>
+                  <div class="card-subtitle-text">Current throughput and bottleneck indicators</div>
+                </div>
+                <span class="sync-chip live-chip">Live</span>
+              </div>
+              <div class="analytics-live-grid">
+                <div class="analytics-live-item analytics-live-no-show">
+                  <div class="analytics-live-icon">⚠</div>
+                  <div class="analytics-live-value" id="liveNoShows">0</div>
+                  <div class="analytics-live-label">No-shows today</div>
+                </div>
+                <div class="analytics-live-item analytics-live-urgent">
+                  <div class="analytics-live-icon">⏱</div>
+                  <div class="analytics-live-value" id="liveUrgentQueue">0</div>
+                  <div class="analytics-live-label">Urgent queue</div>
+                </div>
+                <div class="analytics-live-item analytics-live-wait">
+                  <div class="analytics-live-icon">🧭</div>
+                  <div class="analytics-live-value" id="liveAvgWait">0m</div>
+                  <div class="analytics-live-label">Avg wait time</div>
+                </div>
+                <div class="analytics-live-item analytics-live-capacity">
+                  <div class="analytics-live-icon">📈</div>
+                  <div class="analytics-live-value" id="liveCapacity">0%</div>
+                  <div class="analytics-live-label">Capacity used</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="clinical-card">
+              <div class="card-title-row flex-between">
+                <div>
+                  <h2>Doctor Performance Snapshot</h2>
+                  <div class="card-subtitle-text">Completion rate and case volume by clinician</div>
+                </div>
+                <span class="sync-chip">This week</span>
+              </div>
+              <div class="analytics-doctor-list" id="analyticsDoctorPerformanceList">
+                <div class="analytics-doctor-row loading-row">Calculating clinician performance...</div>
               </div>
             </div>
           </div>

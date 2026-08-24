@@ -5,6 +5,8 @@ let activeHoldId = null;
 let activeHoldSlotStart = null;
 let selectedDoctorId = null;
 let pendingLeaveData = null;
+let analyticsViewMode = 'combined';
+let analyticsSelectedDoctor = 'all';
 
 const tokens = {
   patient: '',
@@ -70,6 +72,25 @@ window.addEventListener('DOMContentLoaded', () => {
   if (cta) {
     cta.addEventListener('click', () => {
       showMainApp();
+    });
+  }
+
+  document.addEventListener('click', (event) => {
+    const toggle = event.target.closest('[data-analytics-mode]');
+    if (toggle) {
+      analyticsViewMode = toggle.dataset.analyticsMode;
+      const buttons = document.querySelectorAll('.toggle-pill[data-analytics-mode]');
+      buttons.forEach(btn => btn.classList.toggle('active', btn === toggle));
+      populateAnalyticsDoctorSelect();
+      loadInsightsAnalytics();
+    }
+  });
+
+  const doctorSelect = document.getElementById('analyticsDoctorSelect');
+  if (doctorSelect) {
+    doctorSelect.addEventListener('change', (event) => {
+      analyticsSelectedDoctor = event.target.value;
+      loadInsightsAnalytics();
     });
   }
 });
@@ -309,6 +330,132 @@ async function loadMedicalRecords() {
 }
 
 
+function populateAnalyticsDoctorSelect() {
+  const doctorSelect = document.getElementById('analyticsDoctorSelect');
+  if (!doctorSelect) return;
+
+  const existingValue = analyticsSelectedDoctor;
+  const doctors = new Set();
+
+  const currentAppts = window.__analyticsSnapshot || [];
+  currentAppts.forEach(appt => {
+    if (appt.doctor_name) doctors.add(appt.doctor_name);
+  });
+
+  doctorSelect.innerHTML = '<option value="all">All doctors</option>' + Array.from(doctors).map(name => 
+    `<option value="${name}">${name}</option>`
+  ).join('');
+
+  if (doctors.has(existingValue)) {
+    doctorSelect.value = existingValue;
+  } else {
+    analyticsSelectedDoctor = 'all';
+    doctorSelect.value = 'all';
+  }
+
+  const mode = analyticsViewMode === 'doctor';
+  doctorSelect.disabled = !mode || doctors.size === 0;
+  doctorSelect.style.opacity = mode && doctors.size > 0 ? '1' : '0.55';
+}
+
+function buildAnalyticsPie(appts) {
+  const pie = document.getElementById('analyticsDistributionPie');
+  const center = document.getElementById('analyticsPieCenter');
+  const legend = document.getElementById('analyticsPieLegend');
+  if (!pie || !center || !legend) return;
+
+  const total = appts.length || 1;
+  const high = appts.filter(a => a.symptom_summary?.ai_summary?.urgency === 'High').length;
+  const medium = appts.filter(a => a.symptom_summary?.ai_summary?.urgency === 'Medium').length;
+  const low = appts.filter(a => a.symptom_summary?.ai_summary?.urgency === 'Low').length;
+
+  const segments = [
+    { name: 'High', value: high, color: 'var(--status-coral)' },
+    { name: 'Medium', value: medium, color: 'var(--status-amber)' },
+    { name: 'Low', value: low, color: 'var(--status-green)' }
+  ];
+
+  const totalValue = segments.reduce((sum, item) => sum + item.value, 0) || 1;
+  let start = 0;
+  const gradient = segments.map(segment => {
+    const percent = (segment.value / totalValue) * 100;
+    const end = start + percent;
+    const chunk = `${segment.color} ${start}% ${end}%`;
+    start = end;
+    return chunk;
+  }).join(', ');
+
+  pie.style.background = `conic-gradient(${gradient})`;
+  center.innerText = total;
+  legend.innerHTML = segments.map(item => {
+    const pct = totalValue > 0 ? Math.round((item.value / totalValue) * 100) : 0;
+    return `
+      <div class="analytics-pie-legend-item">
+        <span class="analytics-pie-legend-label"><span class="analytics-pie-legend-swatch" style="background:${item.color};"></span>${item.name}</span>
+        <strong style="color: var(--text-primary);">${pct}%</strong>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderDoctorPerformance(appts) {
+  const list = document.getElementById('analyticsDoctorPerformanceList');
+  if (!list) return;
+
+  const doctorStats = {};
+  appts.forEach(appt => {
+    const doctorName = appt.doctor_name || 'Unassigned';
+    if (!doctorStats[doctorName]) {
+      doctorStats[doctorName] = { total: 0, completed: 0, cancelled: 0, urgent: 0, durationMinutes: [] };
+    }
+    const stats = doctorStats[doctorName];
+    stats.total += 1;
+    if (appt.status === 'completed') stats.completed += 1;
+    if (appt.status === 'cancelled') stats.cancelled += 1;
+    if (appt.symptom_summary?.ai_summary?.urgency === 'High') stats.urgent += 1;
+    const start = appt.slot_start ? new Date(appt.slot_start).getTime() : null;
+    const end = appt.slot_end ? new Date(appt.slot_end).getTime() : null;
+    if (start && end) {
+      stats.durationMinutes.push(Math.max(10, Math.round((end - start) / 60000)));
+    } else {
+      stats.durationMinutes.push(25);
+    }
+  });
+
+  const rows = Object.entries(doctorStats)
+    .map(([doctorName, stats]) => {
+      const completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+      const avgDuration = stats.durationMinutes.reduce((sum, value) => sum + value, 0) / stats.durationMinutes.length;
+      return {
+        doctorName,
+        total: stats.total,
+        completed: stats.completed,
+        completionRate,
+        urgent: stats.urgent,
+        avgDuration: Math.round(avgDuration)
+      };
+    })
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 4);
+
+  if (!rows.length) {
+    list.innerHTML = '<div class="analytics-doctor-row loading-row">No doctor data available yet.</div>';
+    return;
+  }
+
+  list.innerHTML = rows.map(row => `
+    <div class="analytics-doctor-row">
+      <div>
+        <div class="analytics-doctor-name">${row.doctorName}</div>
+        <div class="analytics-doctor-meta">${row.urgent} high-priority cases</div>
+      </div>
+      <div class="analytics-doctor-stat">${row.completionRate}%<small>completion</small></div>
+      <div class="analytics-doctor-stat">${row.total}<small>booked</small></div>
+      <div class="analytics-doctor-stat">${row.avgDuration}m<small>avg visit</small></div>
+    </div>
+  `).join('');
+}
+
 async function loadInsightsAnalytics() {
   try {
     const res = await fetch(`${API_BASE}/patients/my-appointments`, {
@@ -316,27 +463,43 @@ async function loadInsightsAnalytics() {
     });
     const data = await res.json();
     const appts = data.appointments || [];
+    window.__analyticsSnapshot = appts;
 
-    // Calculate metrics
-    const total = appts.length;
-    const completed = appts.filter(a => a.status === 'completed').length;
-    const cancelled = appts.filter(a => a.status === 'cancelled').length;
+    const filteredAppts = analyticsViewMode === 'doctor' && analyticsSelectedDoctor !== 'all'
+      ? appts.filter(a => (a.doctor_name || a.doctor?.name) === analyticsSelectedDoctor)
+      : appts;
+
+    populateAnalyticsDoctorSelect();
+
+    const total = filteredAppts.length;
+    const completed = filteredAppts.filter(a => a.status === 'completed').length;
+    const cancelled = filteredAppts.filter(a => a.status === 'cancelled').length;
     const cancelRate = total > 0 ? ((cancelled / total) * 100).toFixed(1) : '0.0';
 
-    const highUrgency = appts.filter(a => a.symptom_summary?.ai_summary?.urgency === 'High').length;
-    const medUrgency  = appts.filter(a => a.symptom_summary?.ai_summary?.urgency === 'Medium').length;
-    const lowUrgency  = appts.filter(a => a.symptom_summary?.ai_summary?.urgency === 'Low').length;
+    const highUrgency = filteredAppts.filter(a => a.symptom_summary?.ai_summary?.urgency === 'High').length;
+    const medUrgency  = filteredAppts.filter(a => a.symptom_summary?.ai_summary?.urgency === 'Medium').length;
+    const lowUrgency  = filteredAppts.filter(a => a.symptom_summary?.ai_summary?.urgency === 'Low').length;
 
-    // Update KPI UI
+    const demandTitle = document.getElementById('analyticsDemandTitle');
+    const demandSubtitle = document.getElementById('analyticsDemandSubtitle');
+    if (demandTitle) {
+      demandTitle.innerText = analyticsViewMode === 'doctor' && analyticsSelectedDoctor !== 'all'
+        ? `${analyticsSelectedDoctor} Performance`
+        : 'Clinical Specialization Demand';
+    }
+    if (demandSubtitle) {
+      demandSubtitle.innerText = analyticsViewMode === 'doctor' && analyticsSelectedDoctor !== 'all'
+        ? `Live booking and triage trends for ${analyticsSelectedDoctor}`
+        : 'Patient booking distribution per department';
+    }
+
     const elTotal = document.getElementById('kpiTotalScheduled');
     const elComp  = document.getElementById('kpiCompleted');
     const elRate  = document.getElementById('kpiCancelRate');
-    
     if (elTotal) elTotal.innerText = total;
     if (elComp)  elComp.innerText  = completed;
     if (elRate)  elRate.innerText  = `${cancelRate}%`;
 
-    // Utilization
     const utilPct = total > 0 ? ((completed / total) * 100).toFixed(1) : '0.0';
     const bar = document.getElementById('utilizationProgressBar');
     const txt = document.getElementById('utilizationText');
@@ -345,7 +508,6 @@ async function loadInsightsAnalytics() {
     if (txt) txt.innerText = `${completed} / ${total} slots completed`;
     if (pct) pct.innerText = `${utilPct}%`;
 
-    // Urgency counters
     const hCount = document.getElementById('urgencyHighCount');
     const mCount = document.getElementById('urgencyMedCount');
     const lCount = document.getElementById('urgencyLowCount');
@@ -360,9 +522,8 @@ async function loadInsightsAnalytics() {
     if (mMeta) mMeta.innerText = `${total > 0 ? Math.round((medUrgency/total)*100) : 0}% (${medUrgency} cases)`;
     if (lMeta) lMeta.innerText = `${total > 0 ? Math.round((lowUrgency/total)*100) : 0}% (${lowUrgency} cases)`;
 
-    // Calculate 7-day breakdown (Mon-Sun)
-    const dayCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 0: 0 }; // 0 is Sun
-    appts.forEach(a => {
+    const dayCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 0: 0 };
+    filteredAppts.forEach(a => {
       const d = new Date(a.slot_start).getDay();
       dayCounts[d] = (dayCounts[d] || 0) + 1;
     });
@@ -379,47 +540,74 @@ async function loadInsightsAnalytics() {
         const pct = cnt === 0 ? 6 : Math.round((cnt / maxVal) * 100);
         elBar.style.height = `${pct}%`;
         elBar.style.minHeight = '6px';
-        if (cnt > 0) elBar.style.background = 'var(--accent-teal)';
+        elBar.style.background = cnt > 0 ? 'linear-gradient(180deg, #14b8a6, var(--accent-teal))' : 'rgba(255,255,255,0.08)';
       }
     });
 
+    const scopeLabel = analyticsViewMode === 'doctor' && analyticsSelectedDoctor !== 'all' ? `${analyticsSelectedDoctor}` : 'Combined';
     const elTotalWeek = document.getElementById('analyticsTotalWeek');
     const elDailyAvg  = document.getElementById('analyticsDailyAvg');
-    if (elTotalWeek) elTotalWeek.innerText = `${total} appointments`;
+    if (elTotalWeek) elTotalWeek.innerText = `${total} appointments (${scopeLabel})`;
     if (elDailyAvg)  elDailyAvg.innerText  = `${(total / 7).toFixed(1)}/day`;
 
-    // Specialization Demand Breakdown
     const specMap = {};
-    appts.forEach(a => {
-      const spec = a.specialisation || 'General Medicine';
-      specMap[spec] = (specMap[spec] || 0) + 1;
+    filteredAppts.forEach(a => {
+      const key = analyticsViewMode === 'doctor' && analyticsSelectedDoctor !== 'all'
+        ? (a.status || 'Scheduled')
+        : (a.specialisation || 'General Medicine');
+      specMap[key] = (specMap[key] || 0) + 1;
     });
 
     const specContainer = document.getElementById('analyticsSpecContainer');
     if (specContainer) {
       const entries = Object.entries(specMap);
       if (entries.length === 0) {
-        specContainer.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted);">No departmental bookings recorded yet.</div>';
+        specContainer.innerHTML = '<div style="font-size:0.8rem; color:var(--text-muted);">No bookings recorded in this scope yet.</div>';
       } else {
-        const colors = ['var(--accent-teal)', 'var(--status-amber)', 'var(--status-green)', 'var(--status-coral)'];
-        specContainer.innerHTML = entries.map(([dept, count], idx) => {
+        const colors = ['var(--accent-teal)', 'var(--status-amber)', 'var(--status-green)', 'var(--status-coral)', 'var(--primary-strong)', '#8b5cf6'];
+        specContainer.innerHTML = entries.map(([label, count], idx) => {
           const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
           const color = colors[idx % colors.length];
+          const keyLabel = analyticsViewMode === 'doctor' && analyticsSelectedDoctor !== 'all' ? label : label;
           return `
-            <div class="analytics-spec-row" style="margin-bottom:0.75rem;">
+            <div class="analytics-spec-row">
               <div class="analytics-spec-header" style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:0.2rem;">
-                <strong style="color:var(--text-primary);">${dept}</strong>
-                <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted);">${count} visits (${percentage}%)</span>
+                <strong style="color:var(--text-primary);">${keyLabel}</strong>
+                <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted);">${count} (${percentage}%)</span>
               </div>
-              <div class="analytics-spec-bar-track" style="width:100%; height:8px; background:var(--bg-main); border-radius:4px; overflow:hidden;">
-                <div class="analytics-spec-bar-fill" style="width:${percentage}%; height:100%; background:${color}; border-radius:4px;"></div>
+              <div class="analytics-spec-bar-track">
+                <div class="analytics-spec-bar-fill" style="width:${percentage}%; background:${color};"></div>
               </div>
             </div>
           `;
         }).join('');
       }
     }
-  } catch (err) {}
+
+    buildAnalyticsPie(filteredAppts);
+    renderDoctorPerformance(filteredAppts);
+
+    const todayNoShows = filteredAppts.filter(a => {
+      const day = new Date(a.slot_start);
+      const today = new Date();
+      return a.status === 'cancelled' && day.toDateString() === today.toDateString();
+    }).length;
+    const urgentQueue = filteredAppts.filter(a => a.symptom_summary?.ai_summary?.urgency === 'High').length;
+    const avgWait = filteredAppts.length ? Math.max(8, Math.round((filteredAppts.length * 4.5) / Math.max(1, filteredAppts.filter(a => a.status === 'completed').length || 1))) : 0;
+    const capacityUsed = filteredAppts.length ? Math.min(100, Math.round((filteredAppts.filter(a => a.status === 'completed').length / Math.max(1, filteredAppts.length)) * 100)) : 0;
+
+    const noShowEl = document.getElementById('liveNoShows');
+    const urgentEl = document.getElementById('liveUrgentQueue');
+    const waitEl = document.getElementById('liveAvgWait');
+    const capEl = document.getElementById('liveCapacity');
+
+    if (noShowEl) noShowEl.innerText = todayNoShows;
+    if (urgentEl) urgentEl.innerText = urgentQueue;
+    if (waitEl) waitEl.innerText = `${avgWait}m`;
+    if (capEl) capEl.innerText = `${capacityUsed}%`;
+  } catch (err) {
+    console.error('Analytics load failure:', err);
+  }
 }
 
 function switchLabTab(tab) {
