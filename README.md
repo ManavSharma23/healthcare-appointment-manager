@@ -30,17 +30,19 @@ A production-grade, full-stack Healthcare Appointment Platform featuring 5 speci
 - **Pre-Visit Triage Urgency Spread**: SVG ring indicators and aggregate triage severity distribution bars.
 
 ### 5. ⚡ Super Admin & Developer Workstation (Elevated Access Mode)
-- **Real-Time System Engine Status**: Database pool connection monitors, active slot hold counters, worker queue health, and 99.98% uptime metrics.
+- **Operational Overview**: Reads current system values from the app database, including active doctors, open holds, and notification backlog.
 - **Atomic Slot Hold Purge Engine**: Clean up orphaned or expired holds with zero patient investment.
-- **API Health & Webhook Monitor**: Live status check for Google Calendar sync webhooks, SMTP email queue, and Gemini LLM pipeline.
+- **Security & Audit Monitoring**: Review audit activity, security-event feed, and role-based operational actions.
 - **Full Compliance Audit Trail**: Searchable, filterable audit log viewer with date-range filters, role filtering, sorting, and 1-click **CSV Export**.
+
+> Note: The superadmin overview is based on the current SQLite data in the app and may vary depending on seed data and live records.
 
 ---
 
 ## 🎨 Design & Accessibility Features
 
 - **🌓 Dark / Light Mode Theme Engine**: 1-click theme switcher in the top header with high-contrast Dark Mode overrides for slot buttons, form controls, and AI clinical cards.
-- **🔔 Real-Time Notification & Sound Alert System**: Header notification bell popover feed with sound alert engine (`playAlertSound()`) on booking events.
+- **🔔 Notification & Event Feed**: Activity-oriented messaging and event handling for bookings, holds, leaves, and admin actions.
 - **🔍 Global Cross-View Search Bar**: Instant search across patients, doctors, specializations, and time slots.
 - **👤 Profile Session Switcher**: Avatar initials circle in the sidebar footer supporting instant role context switching.
 
@@ -63,7 +65,7 @@ Copy `.env.example` to `.env`:
 ```bash
 cp .env.example .env
 ```
-*The default `.env` configuration works out-of-the-box using SQLite with zero external database configuration required!*
+*The project is configured for a local SQLite database and demo seed data, which makes setup easy for local development and testing.*
 
 ### 4. Database Setup & Seeding
 ```bash
@@ -95,7 +97,7 @@ Open **`http://localhost:4000`** in your browser to launch the application.
 - **`VisitNote`**: Post-visit clinical notes, JSON prescriptions, and patient-friendly AI summaries.
 - **`MedicationReminder`**: Scheduled medication intake frequency and background dispatch timestamps.
 - **`Notification`**: Email/SMS notification logs with retry counters (`pending` \| `sent` \| `failed` dead-letter queue).
-- **`CalendarEvent` / `CalendarToken`**: OAuth 2.0 Google Calendar event synchronization mapping.
+- **`CalendarEvent` / `CalendarToken`**: Google Calendar synchronization support is included in the app structure and schema, with token storage for integration flows.
 - **`AuditLog`**: System compliance audit trail with role, action, and timestamp indexing.
 
 ---
