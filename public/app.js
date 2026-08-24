@@ -761,11 +761,28 @@ async function loadDoctorSchedule() {
 
       ${canSubmitNotes ? `
         <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border-color);">
-          <label class="clinical-label">Submit Post-Visit Clinical Notes & Prescription</label>
-          <div class="form-group">
-            <textarea id="notes_${appt.id}" rows="2" placeholder="Clinical diagnosis and notes..."></textarea>
+          <div class="form-group" style="margin-bottom:0.75rem;">
+            <label class="clinical-label">🩺 Doctor's Clinical Diagnosis & Notes</label>
+            <textarea id="notes_${appt.id}" rows="2" placeholder="e.g. Patient presents with mild muscle strain. Prescribed rest and pain relief..."></textarea>
           </div>
-          <button class="btn btn-teal" onclick="submitPostVisitNotes('${appt.id}')">Submit Clinical Notes & Complete Visit</button>
+          
+          <div class="grid-2col" style="margin-bottom:0.85rem; gap:0.75rem;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="clinical-label">💊 Prescribed Medicine & Dosage</label>
+              <input type="text" id="med_name_${appt.id}" placeholder="e.g. Paracetamol 500mg, Ibuprofen 400mg" />
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="clinical-label">⏰ Frequency / Schedule</label>
+              <select id="med_freq_${appt.id}">
+                <option value="twice_daily" selected>Twice daily (after meals)</option>
+                <option value="once_daily">Once daily (morning)</option>
+                <option value="three_times_daily">Three times daily</option>
+                <option value="as_needed">As needed for pain</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="btn btn-teal" onclick="submitPostVisitNotes('${appt.id}')">Submit Clinical Notes & Prescription</button>
         </div>
       ` : isCompleted ? `
         <div class="clinical-triage-card" style="border-left-color:var(--status-green);">
@@ -786,10 +803,20 @@ async function loadDoctorSchedule() {
 
 async function submitPostVisitNotes(appointmentId) {
   const notes = document.getElementById(`notes_${appointmentId}`).value;
+  const medName = document.getElementById(`med_name_${appointmentId}`).value.trim();
+  const medFreq = document.getElementById(`med_freq_${appointmentId}`).value;
+
   if (!notes) {
     alert('Please enter clinical notes.');
     return;
   }
+
+  const prescriptionList = medName ? [{
+    medicine: medName,
+    dosage: '1 dose',
+    frequency: medFreq.replace(/_/g, ' '),
+    duration: '5 days'
+  }] : [];
 
   const res = await fetch(`${API_BASE}/doctors/appointments/${appointmentId}/notes`, {
     method: 'POST',
@@ -799,13 +826,13 @@ async function submitPostVisitNotes(appointmentId) {
     },
     body: JSON.stringify({
       doctor_notes: notes,
-      prescription: [{ medicine: 'Amoxicillin 500mg', dosage: '1 tablet', frequency: 'twice daily', duration: '5 days' }]
+      prescription: prescriptionList
     })
   });
 
   if (res.ok) {
-    alert('Clinical notes submitted. Post-visit AI summary generated & medication reminders scheduled.');
-    appendAuditLog(`Dr. Sarah Jenkins submitted visit notes for appointment #${appointmentId.substring(0, 8)}`);
+    alert('Clinical notes and prescription submitted successfully!');
+    appendAuditLog(`Submitted visit notes & prescription for appointment #${appointmentId.substring(0, 8)}`);
     loadDoctorSchedule();
     loadPatientAppointments();
   } else {
