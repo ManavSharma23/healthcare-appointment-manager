@@ -162,10 +162,13 @@
               <!-- Active Hold Banner — shown once a slot is reserved -->
               <div id="activeHoldSection" class="hold-ledger-banner hidden">
                 <div class="hold-header-row">
-                  <span class="hold-alert-title">5-MINUTE TRANSACTIONAL HOLD ACTIVE</span>
+                  <span class="hold-alert-title">5-MINUTE TRANSACTIONAL HOLD ACTIVE (<span id="holdCountdownText" class="mono-code">05:00</span>)</span>
                   <button type="button" class="btn btn-outline btn-sm" onclick="releaseCurrentHold()" style="font-size:0.75rem;">Release / Cancel Hold</button>
                 </div>
                 <p class="hold-instruction">Slot locked against double-booking. Complete symptom details below to confirm appointment.</p>
+                <div class="hold-progress-bar-wrap">
+                  <div id="holdProgressBarFill" class="hold-progress-bar-fill"></div>
+                </div>
 
                 <div class="form-group">
                   <label class="clinical-label">Clinical Symptoms Description</label>
@@ -487,6 +490,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer"></div>
 
   <script src="app.js"></script>
 </body>

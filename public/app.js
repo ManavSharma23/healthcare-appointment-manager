@@ -284,7 +284,36 @@ function selectSlotLocal(slotStart) {
   loadDoctorSlots();
 }
 
+let holdTimerInterval = null;
+
+function startHoldCountdownTimer(durationSeconds) {
+  clearInterval(holdTimerInterval);
+  let remaining = durationSeconds;
+  const total = durationSeconds;
+
+  const textEl = document.getElementById('holdCountdownText');
+  const barEl = document.getElementById('holdProgressBarFill');
+
+  holdTimerInterval = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      clearInterval(holdTimerInterval);
+      showToast('Slot hold expired!', 'error');
+      releaseCurrentHold();
+      return;
+    }
+    const mins = String(Math.floor(remaining / 60)).padStart(2, '0');
+    const secs = String(remaining % 60).padStart(2, '0');
+    if (textEl) textEl.innerText = `${mins}:${secs}`;
+    if (barEl) {
+      const pct = (remaining / total) * 100;
+      barEl.style.width = `${pct}%`;
+    }
+  }, 1000);
+}
+
 async function releaseCurrentHold() {
+  clearInterval(holdTimerInterval);
   if (!activeHoldId) return;
   try {
     await fetch(`${API_BASE}/patients/appointments/${activeHoldId}/cancel`, {
@@ -301,7 +330,7 @@ async function releaseCurrentHold() {
   activeHoldId = null;
   activeHoldSlotStart = null;
   document.getElementById('activeHoldSection').classList.add('hidden');
-  document.getElementById('bookingMessage').innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem; margin-top:0.5rem;">Slot hold released. Select any available slot to hold.</div>';
+  showToast('Slot hold released.', 'info');
   loadDoctorSlots();
   loadPatientAppointments();
 }
@@ -334,8 +363,12 @@ async function triggerReserveHold() {
       activeHoldSlotStart = slotStart;
       selectedSlotStart = null;
       document.getElementById('slotActionPanel').classList.add('hidden');
-      msgDiv.innerHTML = `<div style="color:var(--status-amber); font-weight:600; font-size:0.85rem; margin-top:0.75rem;">Slot Held for 5 Minutes. Complete symptom details below and click Confirm Booking.</div>`;
       document.getElementById('activeHoldSection').classList.remove('hidden');
+
+      // Start live 5-minute hold progress countdown timer
+      startHoldCountdownTimer(5 * 60);
+
+      showToast('5-minute atomic slot hold active! Complete symptoms to confirm.', 'warning');
       loadDoctorSlots();
       loadPatientAppointments();
     } else {
@@ -370,7 +403,8 @@ async function submitSymptomsAndConfirm() {
   });
 
   if (res.ok) {
-    alert('Appointment Confirmed. Pre-visit AI summary generated & Google Calendar synchronized.');
+    clearInterval(holdTimerInterval);
+    showToast('Appointment Confirmed! Pre-visit AI summary generated & Google Calendar synchronized.', 'success');
     appendAuditLog(`Patient Jane Doe confirmed appointment #${activeHoldId.substring(0, 8)}`);
     document.getElementById('activeHoldSection').classList.add('hidden');
     document.getElementById('symptomsInput').value = '';
@@ -379,7 +413,7 @@ async function submitSymptomsAndConfirm() {
     loadPatientAppointments();
     loadDoctorSlots();
   } else {
-    alert('Failed to confirm appointment.');
+    showToast('Failed to confirm appointment.', 'error');
   }
 }
 
@@ -501,15 +535,39 @@ async function loadPatientAppointments() {
   }
 }
 
+// ─── TOAST NOTIFICATION HELPER ───────────────────────────────────────────────
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const div = document.createElement('div');
+  div.className = `toast-message ${type === 'error' ? 'toast-error' : type === 'warning' ? 'toast-warning' : ''}`;
+  const icon = type === 'error' ? '❌' : type === 'warning' ? '⚠️' : '✅';
+  div.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+  container.appendChild(div);
+
+  setTimeout(() => {
+    div.style.opacity = '0';
+    div.style.transform = 'translateY(10px)';
+    div.style.transition = 'all 0.3s ease';
+    setTimeout(() => div.remove(), 300);
+  }, 4000);
+}
+
 // DOCTOR WORKSTATION
 async function loadDoctorSchedule() {
+  const container = document.getElementById('doctorAppointmentsList');
+  // Skeleton loading shimmer
+  container.innerHTML = `
+    <div class="skeleton-card" style="height:100px;"></div>
+    <div class="skeleton-card" style="height:100px;"></div>
+  `;
+
   const date = document.getElementById('doctorFilterDate').value;
   const res = await fetch(`${API_BASE}/doctors/appointments?date=${date || ''}`, {
     headers: { 'Authorization': `Bearer ${tokens.doctor}` }
   });
   const data = await res.json();
 
-  const container = document.getElementById('doctorAppointmentsList');
   container.innerHTML = '';
 
   const rawAppointments = data.appointments || [];
@@ -532,11 +590,23 @@ async function loadDoctorSchedule() {
       <div style="font-size:0.75rem; color:var(--accent-teal); margin-top:0.25rem;">Confirmed Visit</div>
     `;
   } else {
-    nextBox.innerHTML = `<div style="font-size:0.85rem; color:var(--text-muted);">No confirmed upcoming visits for this date filter.</div>`;
+    nextBox.innerHTML = `
+      <div class="empty-state-card" style="padding:1rem;">
+        <div class="empty-state-icon">📅</div>
+        <div style="font-size:0.85rem; font-weight:600;">No confirmed upcoming visits</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);">Select another date or wait for patient bookings</div>
+      </div>
+    `;
   }
 
   if (rawAppointments.length === 0) {
-    container.innerHTML = '<p style="color:var(--text-muted); padding:1rem;">No appointments scheduled for this date.</p>';
+    container.innerHTML = `
+      <div class="empty-state-card">
+        <div class="empty-state-icon">📋</div>
+        <div style="font-size:0.9rem; font-weight:600; color:var(--text-primary);">No appointments scheduled for this date</div>
+        <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">Patients booking slots for this date will appear here in real-time.</div>
+      </div>
+    `;
     return;
   }
 
@@ -646,13 +716,27 @@ async function handleCreateDoctor(e) {
 
   if (res.ok) {
     const data = await res.json();
-    alert('Doctor profile created successfully.');
+    showToast(`Doctor account "${data.doctor?.name || name}" created successfully!`, 'success');
     appendAuditLog(`Created doctor account: ${data.doctor?.name || name} (${specialisation})`);
+    document.getElementById('adminDocName').value = '';
+    document.getElementById('adminDocEmail').value = '';
+    document.getElementById('adminDocPass').value = '';
     loadAdminDoctorsList();
     loadDoctors();
   } else {
     const data = await res.json();
-    alert(`Error: ${data.error || 'Failed to create doctor profile.'}`);
+    const nameInput = document.getElementById('adminDocName');
+    const specSelect = document.getElementById('adminDocSpec');
+    
+    // Add shake animation feedback to input fields
+    nameInput.classList.add('shake-error');
+    specSelect.classList.add('shake-error');
+    setTimeout(() => {
+      nameInput.classList.remove('shake-error');
+      specSelect.classList.remove('shake-error');
+    }, 500);
+
+    showToast(data.error || 'Failed to create doctor profile.', 'error');
   }
 }
 
