@@ -448,14 +448,14 @@ function togglePastHistory() {
     btn.innerText = 'Hide Past & Cancelled History ▲';
   } else {
     container.classList.add('hidden');
-    btn.innerText = 'View Past & Cancelled History ▼';
+    btn.innerText = 'Show ▼';
   }
 }
 
-// FIX 2: Restructured Appointments Feed (Active vs Collapsed Past History)
+// Restructured Appointments Feed: Upcoming → Completed → Cancelled
 async function loadPatientAppointments() {
   const container = document.getElementById('patientAppointmentsList');
-  container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Loading active appointments...</p>';
+  container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Loading appointments...</p>';
 
   const res = await fetch(`${API_BASE}/patients/my-appointments`, {
     headers: { 'Authorization': `Bearer ${tokens.patient}` }
@@ -464,94 +464,134 @@ async function loadPatientAppointments() {
   container.innerHTML = '';
 
   const rawAppointments = data.appointments || [];
-
   if (rawAppointments.length === 0) {
-    container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">No active appointments found.</p>';
+    container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">No appointments found.</p>';
     return;
   }
 
-  // Separate Active/Upcoming from Cancelled/Past
-  const activeList = rawAppointments.filter(a => a.status === 'confirmed' || a.status === 'held' || a.status === 'completed');
-  const pastList = rawAppointments.filter(a => a.status === 'cancelled');
+  // ── Split into 3 buckets ──────────────────────────────────────────────────
+  const upcomingList  = rawAppointments.filter(a => a.status === 'confirmed' || a.status === 'held');
+  const completedList = rawAppointments.filter(a => a.status === 'completed');
+  const cancelledList = rawAppointments.filter(a => a.status === 'cancelled');
 
-  // Sort active chronologically (slot_start ASC)
-  activeList.sort((a, b) => new Date(a.slot_start).getTime() - new Date(b.slot_start).getTime());
+  upcomingList.sort((a, b)  => new Date(a.slot_start) - new Date(b.slot_start));
+  completedList.sort((a, b) => new Date(b.slot_start) - new Date(a.slot_start)); // newest first
 
-  if (activeList.length === 0) {
-    container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">No upcoming active appointments.</p>';
-  } else {
-    activeList.forEach(appt => {
-      const timeStr = new Date(appt.slot_start).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
-      const card = document.createElement('div');
-      card.className = 'clinical-feed-card';
-      card.innerHTML = `
-        <div class="flex-between">
-          <div>
-            <strong style="font-size:0.95rem; color:var(--text-primary);">${appt.doctor_name}</strong>
-            <div style="font-size:0.8rem; color:var(--accent-teal); font-weight:500;">${appt.specialisation}</div>
-            <div class="mono-code" style="margin-top:0.2rem;">${timeStr}</div>
+  // ── Helper: render a single appointment card ──────────────────────────────
+  function buildApptCard(appt, opts = {}) {
+    const { dimmed = false } = opts;
+    const timeStr = new Date(appt.slot_start).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+    const isCompleted = appt.status === 'completed';
+    const statusClass = appt.status === 'confirmed' ? 'urgency-low'
+      : appt.status === 'held'      ? 'urgency-medium'
+      : appt.status === 'completed' ? 'status-badge-completed'
+      : 'urgency-high';
+    const statusLabel = appt.status === 'held' ? '⏳ HELD' : appt.status.toUpperCase();
+
+    const card = document.createElement('div');
+    card.className = 'clinical-feed-card appt-card';
+    if (dimmed) card.style.opacity = '0.65';
+
+    // ── Post-visit summary block (shown FIRST for completed visits) ───────
+    const postVisitBlock = isCompleted && appt.visit_note?.ai_patient_summary ? `
+      <div class="post-visit-summary-block">
+        <div class="post-visit-summary-header">
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <span class="post-visit-icon">✅</span>
+            <span class="post-visit-title">Doctor's Post-Visit Summary</span>
           </div>
-          <span class="urgency-badge ${appt.status === 'confirmed' ? 'urgency-low' : appt.status === 'completed' ? 'urgency-low' : 'urgency-medium'}">${appt.status.toUpperCase()}</span>
+          <button class="btn btn-outline btn-sm" style="font-size:0.7rem;" onclick="printVisitSummary()">🖨 Print</button>
         </div>
-
-        ${appt.symptom_summary ? `
-          <div class="clinical-triage-card">
-            <div class="triage-card-header">
-              <span class="triage-title">PRE-VISIT AI CLINICAL TRIAGE</span>
-              <span class="urgency-badge urgency-${(appt.symptom_summary.ai_summary?.urgency || 'Medium').toLowerCase()}">Urgency: ${appt.symptom_summary.ai_summary?.urgency || 'Medium'}</span>
-            </div>
-            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.25rem;">Suggested Discussion Points for Visit:</div>
-            <ol class="questions-list">
-              ${(appt.symptom_summary.ai_summary?.questions || []).map(q => `<li>${q}</li>`).join('')}
-            </ol>
+        <div class="post-visit-body">${appt.visit_note.ai_patient_summary}</div>
+        ${appt.visit_note?.prescription && appt.visit_note.prescription !== '[]' ? `
+          <div class="prescription-pill-row">
+            <span class="prescription-label">💊 Prescription:</span>
+            ${(() => { try { return JSON.parse(appt.visit_note.prescription).map(p => `<span class="prescription-pill">${p}</span>`).join(''); } catch(e) { return `<span class="prescription-pill">${appt.visit_note.prescription}</span>`; } })()}
           </div>
         ` : ''}
+      </div>
+    ` : '';
 
-        ${appt.visit_note?.ai_patient_summary ? `
-          <div class="clinical-triage-card" style="border-left-color:var(--status-green);">
-            <div class="triage-card-header">
-              <span class="triage-title" style="color:var(--status-green);">PATIENT-FRIENDLY POST-VISIT SUMMARY</span>
-              <button class="btn btn-outline btn-sm" style="font-size:0.7rem; padding:0.2rem 0.5rem;" onclick="printVisitSummary()">Print Summary</button>
-            </div>
-            <div style="font-size:0.85rem; color:var(--text-body);">${appt.visit_note.ai_patient_summary}</div>
+    // ── AI triage block (collapsed for completed visits) ──────────────────
+    const triageId = `triage-${appt.id}`;
+    const triageBlock = appt.symptom_summary ? `
+      <div class="triage-collapsible">
+        <button class="triage-toggle-btn" onclick="toggleTriageBlock('${triageId}')">
+          <span>🔬 Pre-Visit AI Triage</span>
+          <span class="urgency-badge urgency-${(appt.symptom_summary.ai_summary?.urgency || 'medium').toLowerCase()}" style="margin-left:0.5rem;">Urgency: ${appt.symptom_summary.ai_summary?.urgency || 'Medium'}</span>
+          <span class="triage-chevron" id="chevron-${triageId}">${isCompleted ? '▼' : '▲'}</span>
+        </button>
+        <div class="triage-collapsible-body ${isCompleted ? 'hidden' : ''}" id="${triageId}">
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.4rem;">Suggested discussion points:</div>
+          <ol class="questions-list">
+            ${(appt.symptom_summary.ai_summary?.questions || []).map(q => `<li>${q}</li>`).join('')}
+          </ol>
+        </div>
+      </div>
+    ` : '';
+
+    card.innerHTML = `
+      <div class="appt-card-header">
+        <div class="appt-card-doctor-info">
+          <div class="appt-doctor-avatar">${appt.doctor_name.replace('Dr.','').trim().split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase()}</div>
+          <div>
+            <div class="appt-doctor-name">${appt.doctor_name}</div>
+            <div class="appt-specialisation">${appt.specialisation}</div>
           </div>
-        ` : ''}
-      `;
-      container.appendChild(card);
-    });
+        </div>
+        <div style="text-align:right;">
+          <span class="urgency-badge ${statusClass}">${statusLabel}</span>
+          <div class="appt-datetime">📅 ${timeStr}</div>
+        </div>
+      </div>
+      ${postVisitBlock}
+      ${triageBlock}
+    `;
+    return card;
   }
 
-  // Collapsible Past History Section
-  if (pastList.length > 0) {
-    const historyWrapper = document.createElement('div');
-    historyWrapper.style.marginTop = '1.5rem';
-    historyWrapper.innerHTML = `
+  // ── Section: Upcoming ────────────────────────────────────────────────────
+  if (upcomingList.length > 0) {
+    const label = document.createElement('div');
+    label.className = 'section-divider-label';
+    label.innerHTML = `📋 UPCOMING APPOINTMENTS <span style="opacity:0.6;font-weight:400;">(${upcomingList.length})</span>`;
+    container.appendChild(label);
+    upcomingList.forEach(appt => container.appendChild(buildApptCard(appt)));
+  }
+
+  // ── Section: Completed ───────────────────────────────────────────────────
+  if (completedList.length > 0) {
+    const label = document.createElement('div');
+    label.className = 'section-divider-label';
+    label.style.marginTop = upcomingList.length > 0 ? '1.5rem' : '0';
+    label.innerHTML = `✅ COMPLETED VISITS <span style="opacity:0.6;font-weight:400;">(${completedList.length})</span>`;
+    container.appendChild(label);
+    completedList.forEach(appt => container.appendChild(buildApptCard(appt)));
+  }
+
+  // ── Section: Cancelled (collapsible) ─────────────────────────────────────
+  if (cancelledList.length > 0) {
+    const wrapper = document.createElement('div');
+    wrapper.style.marginTop = '1.5rem';
+    wrapper.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-        <span class="section-divider-label" style="margin-bottom:0;">PAST HISTORY (${pastList.length})</span>
-        <button id="toggleHistoryBtn" class="btn btn-outline btn-sm" style="font-size:0.75rem;" onclick="togglePastHistory()">View Past & Cancelled History ▼</button>
+        <span class="section-divider-label" style="margin-bottom:0;">❌ CANCELLED <span style="opacity:0.6;font-weight:400;">(${cancelledList.length})</span></span>
+        <button id="toggleHistoryBtn" class="btn btn-outline btn-sm" style="font-size:0.75rem;" onclick="togglePastHistory()">Show ▼</button>
       </div>
       <div id="pastHistoryContainer" class="clinical-feed hidden"></div>
     `;
-    container.appendChild(historyWrapper);
-
-    const historyFeed = historyWrapper.querySelector('#pastHistoryContainer');
-    pastList.forEach(appt => {
-      const timeStr = new Date(appt.slot_start).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
-      const card = document.createElement('div');
-      card.className = 'clinical-feed-card';
-      card.style.opacity = '0.7';
-      card.innerHTML = `
-        <div class="flex-between">
-          <div>
-            <strong style="font-size:0.9rem; color:var(--text-muted);">${appt.doctor_name}</strong>
-            <div class="mono-code" style="margin-top:0.2rem;">${timeStr}</div>
-          </div>
-          <span class="urgency-badge urgency-high">CANCELLED</span>
-        </div>
-      `;
-      historyFeed.appendChild(card);
-    });
+    container.appendChild(wrapper);
+    const feed = wrapper.querySelector('#pastHistoryContainer');
+    cancelledList.forEach(appt => feed.appendChild(buildApptCard(appt, { dimmed: true })));
   }
+}
+
+function toggleTriageBlock(id) {
+  const body = document.getElementById(id);
+  const chevron = document.getElementById('chevron-' + id);
+  if (!body) return;
+  body.classList.toggle('hidden');
+  if (chevron) chevron.textContent = body.classList.contains('hidden') ? '▼' : '▲';
 }
 
 // ─── TOAST NOTIFICATION HELPER ───────────────────────────────────────────────
