@@ -475,7 +475,7 @@
                   <h2>7-Day Appointment Volume</h2>
                   <div class="card-subtitle-text">Daily patient intake trends across all specializations</div>
                 </div>
-                <span class="sync-chip">Live Metrics</span>
+                <span class="sync-chip">This Week</span>
               </div>
               <div class="analytics-bar-chart" id="analyticsVolumeChart">
                 <div class="analytics-bar-col">
@@ -504,14 +504,14 @@
                   <div class="analytics-bar-label">Fri</div>
                 </div>
                 <div class="analytics-bar-col">
-                  <div class="analytics-bar-value">0</div>
-                  <div class="analytics-bar analytics-bar-closed" style="height:4%;" title="Sat: Closed"></div>
-                  <div class="analytics-bar-label">Sat</div>
+                  <div class="analytics-bar-value" style="color:var(--text-muted); font-size:0.65rem;">0</div>
+                  <div class="analytics-bar analytics-bar-empty" title="Sat: No appointments scheduled"></div>
+                  <div class="analytics-bar-label" style="opacity:0.6;">Sat</div>
                 </div>
                 <div class="analytics-bar-col">
-                  <div class="analytics-bar-value">0</div>
-                  <div class="analytics-bar analytics-bar-closed" style="height:4%;" title="Sun: Closed"></div>
-                  <div class="analytics-bar-label">Sun</div>
+                  <div class="analytics-bar-value" style="color:var(--text-muted); font-size:0.65rem;">0</div>
+                  <div class="analytics-bar analytics-bar-empty" title="Sun: Clinic Closed"></div>
+                  <div class="analytics-bar-label" style="opacity:0.6;">Sun</div>
                 </div>
               </div>
               <div style="text-align:center; margin-top:0.75rem; font-size:0.75rem; color:var(--text-muted);">
@@ -530,7 +530,10 @@
                   <div class="analytics-spec-header">
                     <span class="analytics-spec-dot" style="background:var(--accent-teal);"></span>
                     <strong>Cardiology</strong>
-                    <span class="analytics-spec-doctor">Dr. Sarah Jenkins</span>
+                    <span class="analytics-spec-doctor">
+                      <span class="analytics-spec-dot" style="background:var(--accent-teal); display:inline-block; margin-right:0.25rem;"></span>
+                      Dr. Sarah Jenkins
+                    </span>
                   </div>
                   <div class="analytics-spec-bar-track">
                     <div class="analytics-spec-bar-fill" style="width:50%; background:var(--accent-teal);"></div>
@@ -544,7 +547,10 @@
                   <div class="analytics-spec-header">
                     <span class="analytics-spec-dot" style="background:var(--status-amber);"></span>
                     <strong>Dermatology</strong>
-                    <span class="analytics-spec-doctor">Dr. Alex Kim</span>
+                    <span class="analytics-spec-doctor">
+                      <span class="analytics-spec-dot" style="background:var(--status-amber); display:inline-block; margin-right:0.25rem;"></span>
+                      Dr. Alex Kim
+                    </span>
                   </div>
                   <div class="analytics-spec-bar-track">
                     <div class="analytics-spec-bar-fill" style="width:30%; background:var(--status-amber);"></div>
@@ -558,7 +564,10 @@
                   <div class="analytics-spec-header">
                     <span class="analytics-spec-dot" style="background:var(--status-green);"></span>
                     <strong>Orthopedics</strong>
-                    <span class="analytics-spec-doctor">Dr. Agam Patel</span>
+                    <span class="analytics-spec-doctor">
+                      <span class="analytics-spec-dot" style="background:var(--status-green); display:inline-block; margin-right:0.25rem;"></span>
+                      Dr. Agam Patel
+                    </span>
                   </div>
                   <div class="analytics-spec-bar-track">
                     <div class="analytics-spec-bar-fill" style="width:20%; background:var(--status-green);"></div>
@@ -578,7 +587,7 @@
             <div class="clinical-card">
               <div class="card-title-row">
                 <h2>No-Show & Cancellation Intelligence</h2>
-                <div class="card-subtitle-text">Slot utilization and backfill recovery efficiency</div>
+                <div class="card-subtitle-text">Slot utilization and consultation efficiency tracking</div>
               </div>
               <div class="analytics-kpi-grid">
                 <div class="analytics-kpi-card">
@@ -594,8 +603,8 @@
                   <div class="analytics-kpi-label">Cancellation Rate</div>
                 </div>
                 <div class="analytics-kpi-card">
-                  <div class="analytics-kpi-num" style="color:var(--accent-teal);">100%</div>
-                  <div class="analytics-kpi-label">Waitlist Backfill</div>
+                  <div class="analytics-kpi-num" style="color:var(--accent-teal);">24m</div>
+                  <div class="analytics-kpi-label">Avg Consult Duration</div>
                 </div>
               </div>
               <div style="margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--border-color);">
@@ -623,10 +632,13 @@
                       <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                       <path class="ring-stroke" style="stroke:var(--status-coral);" stroke-dasharray="10, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                     </svg>
-                    <span class="analytics-urgency-num" style="color:var(--status-coral);">1</span>
+                    <div class="analytics-urgency-icon" style="position:absolute; display:flex; flex-direction:column; align-items:center;">
+                      <svg width="14" height="14" fill="none" stroke="var(--status-coral)" stroke-width="2.5" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                      <span class="analytics-urgency-num" style="color:var(--status-coral); position:static; font-size:0.95rem;">1</span>
+                    </div>
                   </div>
-                  <div class="analytics-urgency-label">High Urgency</div>
-                  <div class="analytics-urgency-pct">10%</div>
+                  <div class="analytics-urgency-label" style="color:var(--status-coral);">High Urgency</div>
+                  <div class="analytics-urgency-pct">10% (1 case)</div>
                 </div>
                 <div class="analytics-urgency-card urgency-med">
                   <div class="analytics-urgency-ring">
@@ -634,10 +646,13 @@
                       <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                       <path class="ring-stroke" style="stroke:var(--status-amber);" stroke-dasharray="20, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                     </svg>
-                    <span class="analytics-urgency-num" style="color:var(--status-amber);">2</span>
+                    <div class="analytics-urgency-icon" style="position:absolute; display:flex; flex-direction:column; align-items:center;">
+                      <svg width="14" height="14" fill="none" stroke="var(--status-amber)" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                      <span class="analytics-urgency-num" style="color:var(--status-amber); position:static; font-size:0.95rem;">2</span>
+                    </div>
                   </div>
-                  <div class="analytics-urgency-label">Medium Urgency</div>
-                  <div class="analytics-urgency-pct">20%</div>
+                  <div class="analytics-urgency-label" style="color:var(--status-amber);">Medium Urgency</div>
+                  <div class="analytics-urgency-pct">20% (2 cases)</div>
                 </div>
                 <div class="analytics-urgency-card urgency-low">
                   <div class="analytics-urgency-ring">
@@ -645,23 +660,26 @@
                       <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                       <path class="ring-stroke" style="stroke:var(--status-green);" stroke-dasharray="70, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                     </svg>
-                    <span class="analytics-urgency-num" style="color:var(--status-green);">7</span>
+                    <div class="analytics-urgency-icon" style="position:absolute; display:flex; flex-direction:column; align-items:center;">
+                      <svg width="14" height="14" fill="none" stroke="var(--status-green)" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg>
+                      <span class="analytics-urgency-num" style="color:var(--status-green); position:static; font-size:0.95rem;">7</span>
+                    </div>
                   </div>
-                  <div class="analytics-urgency-label">Low Urgency</div>
-                  <div class="analytics-urgency-pct">70%</div>
+                  <div class="analytics-urgency-label" style="color:var(--status-green);">Low Urgency</div>
+                  <div class="analytics-urgency-pct">70% (7 cases)</div>
                 </div>
               </div>
               <div style="margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--border-color);">
-                <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem; font-weight:600;">AGGREGATE TRIAGE SEVERITY</div>
-                <div style="width:100%; height:10px; display:flex; border-radius:5px; overflow:hidden;">
-                  <div style="width:10%; background:var(--status-coral);"></div>
-                  <div style="width:20%; background:var(--status-amber);"></div>
-                  <div style="width:70%; background:var(--status-green);"></div>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem; font-weight:600;">AGGREGATE TRIAGE SEVERITY DISTRIBUTION</div>
+                <div style="width:100%; height:12px; display:flex; border-radius:6px; overflow:hidden; position:relative;">
+                  <div style="width:10%; background:var(--status-coral); display:flex; align-items:center; justify-content:center; color:#fff; font-size:0.6rem; font-weight:700;" title="High: 10% (1)">10%</div>
+                  <div style="width:20%; background:var(--status-amber); display:flex; align-items:center; justify-content:center; color:#fff; font-size:0.6rem; font-weight:700;" title="Medium: 20% (2)">20%</div>
+                  <div style="width:70%; background:var(--status-green); display:flex; align-items:center; justify-content:center; color:#fff; font-size:0.6rem; font-weight:700;" title="Low: 70% (7)">70%</div>
                 </div>
-                <div style="display:flex; justify-content:space-between; font-size:0.65rem; color:var(--text-muted); margin-top:0.3rem;">
-                  <span>■ High (10%)</span>
-                  <span>■ Medium (20%)</span>
-                  <span>■ Low (70%)</span>
+                <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted); margin-top:0.4rem;">
+                  <span style="color:var(--status-coral); font-weight:600;">■ High (1)</span>
+                  <span style="color:var(--status-amber); font-weight:600;">■ Medium (2)</span>
+                  <span style="color:var(--status-green); font-weight:600;">■ Low (7)</span>
                 </div>
               </div>
             </div>
