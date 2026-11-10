@@ -4,6 +4,7 @@ import { seedDatabase } from '../src/seed';
 import { createSlotHold, SlotUnavailableError } from '../src/services/bookingService';
 import { addDoctorLeave } from '../src/services/leaveService';
 
+
 describe('Healthcare System Core Mechanisms Tests', () => {
   beforeAll(async () => {
     await seedDatabase();
